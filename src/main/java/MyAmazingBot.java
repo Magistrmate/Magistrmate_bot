@@ -20,7 +20,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
         if (update.hasMessage() && update.getMessage().hasText()) {
             SendMessage message = new SendMessage(); // Create a SendMessage object with mandatory fields
             message.setChatId(update.getMessage().getChatId().toString());
-            message.setText("Hi " + update.getMessage().getFrom().getFirstName());
+            message.setText(update.getMessage().getFrom().getFirstName());
             //message.setText("Hi" + update.getMessage().getText());
             try {
                 execute(message); // Call method to send the message
