@@ -20,6 +20,24 @@
         <artifactId>telegrambots</artifactId>
         <version>6.0.1</version>
     </dependency>
+    <dependency>
+        <groupId>log4j</groupId>
+        <artifactId>log4j</artifactId>
+        <version>1.2.17</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
+    <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>1.7.5</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-simple -->
+    <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-simple</artifactId>
+        <version>1.7.36</version>
+        <scope>runtime</scope>
+    </dependency>
 </dependencies>
     <repositories>
         <repository>
@@ -50,6 +68,19 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.heroku.sdk</groupId>
+                <artifactId>heroku-maven-plugin</artifactId>
+                <version>2.0.8</version>
+                <configuration>
+                    <appName>magistrmate</appName>
+                    <processTypes>
+                        <worker>
+                            java $JAVA_OPTS -cp target/classes:target/dependency/* Main
+                        </worker>
+                    </processTypes>
+                </configuration>
             </plugin>
         </plugins>
     </build>
