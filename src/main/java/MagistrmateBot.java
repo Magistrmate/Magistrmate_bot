@@ -25,7 +25,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotToken() {
-        return "5209127731:AAEHGrz4hmtgmbOtrprHiIuROrCGm04KK4k";
+        return BotConfig.BOT_TOKEN;
     }
 
     @Override
@@ -88,10 +88,10 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         sendMessage.enableMarkdown(true);
 
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
-        sendMessage.setReplyMarkup(replyKeyboardMarkup);
         replyKeyboardMarkup.setSelective(true);
         replyKeyboardMarkup.setResizeKeyboard(true);
         replyKeyboardMarkup.setOneTimeKeyboard(false);
+        sendMessage.setReplyMarkup(replyKeyboardMarkup);
 
         List<KeyboardRow> keyboardRow = new ArrayList<>();
         KeyboardRow keyboard = new KeyboardRow();
