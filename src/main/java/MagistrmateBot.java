@@ -28,6 +28,8 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     String NEXT_BOOK;
     String NEXT_BOOK_CAPTION;
 
+
+
     @Override
     public String getBotUsername() {
         return "Magistrmate_bot";
