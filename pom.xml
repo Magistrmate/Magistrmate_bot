@@ -13,6 +13,11 @@
         <maven.compiler.target>18</maven.compiler.target>
         <java.version>18</java.version>
         <maven.compiler.release>8</maven.compiler.release>
+        <encoding.type>UTF-8</encoding.type>
+
+        <project.build.sourceEncoding>${encoding.type}</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>${encoding.type</project.reporting.outputEncoding>
+        <file.encoding>${encoding.type}</file.encoding>
     </properties>
 <dependencies>
     <dependency>
