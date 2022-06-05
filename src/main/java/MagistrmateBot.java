@@ -27,6 +27,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     public static final String PON_PICTURE = "AgACAgIAAxkBAAICI2KV6u5ALDMcSPP4WPsvdr5iBJ1hAALGuTEbgvKxSGlGhmGbA1qtAQADAgADeQADJAQ";
     String NEXT_BOOK;
     String NEXT_BOOK_CAPTION;
+
     @Override
     public String getBotUsername() {
         return "Magistrmate_bot";
