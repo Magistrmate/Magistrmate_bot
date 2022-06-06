@@ -23,13 +23,39 @@ import java.util.Locale;
 
 public class MagistrmateBot extends TelegramLongPollingBot {
     public static final String PZV_PICTURE = "AgACAgIAAxkBAAIBx2KTdP4CNbqTZfv7Hm7TqGAugkdSAAKIvjEbUaqZSPwL-Up482owAQADAgADeQADJAQ";
+    public static final String PVZ_NAME = "Параллельно задавая вопрос";
+    public static final String PVZ_DISC = """
+            Сборник из пяти произведений. Подробные аннотации внутри.
+            Под покровом единства.
+            Существует вуз, где запрещена дружба, и всех обучают рассчитывать только на себя.
+            Корректировка.
+            В прошлом случайный спор друзей из компании повлиял на их судьбу в настоящем.
+            Лунные тени.
+            Хождение во сне жителей общаги и кровавые истории под утро.
+            Звезда.
+            Сказка о том, как на Землю упала Звезда.
+            Понимания ноль.
+            Дружба между парнем и девушкой существует и поддерживается государством, давая им невероятные способности.""";
     public static final String POD_PICTURE = "AgACAgIAAxkBAAICIWKV6rrWZCfAVHeZRb600fEdhUUtAALFuTEbgvKxSGOQfTzAxJOgAQADAgADeQADJAQ";
+    public static final String POD_NAME = "Под покровом единства";
+    public static final String POD_DISC = "Никогда не задумывались, что друзья — это ваша слабость? Иногда вы" +
+            "рискуете всем ради них. Государство и учебные заведения об этом не расскажут, кроме одного вуза со" +
+            "спецпрограммой, который сделает из каждого студента личность. Где все связи будут запрещены." +
+            "Самостоятельность во главе всего. Все ли смогут пройти такую школу жизни?";
     public static final String KORR_PICTURE = "AgACAgIAAxkBAAICHWKV6h4KSQAB0Cw-9YYzNmKqQYlBbAACwrkxG4LysUioRIR5O_3J4wEAAwIAA3kAAyQE";
+    public static final String KORR_NAME = "Корректировка";
+    public static final String KORR_DISC = "Каждый из нас задумывается о такой штуке, как судьба. Что привело нас к" +
+            "сегодняшнему дню? Друзья, знакомые, парни и девушки. Все ли эти отношения образовались сами собой, или," +
+            "быть может, кто-то из твоих близких друзей всего лишь хорошо разыграл все карты несколько лет назад?";
     public static final String LUNN_PICTURE = "AgACAgIAAxkBAAICH2KV6lrfNbsYfnqVDQwV1uhexKUGAALDuTEbgvKxSBEP75XimlVwAQADAgADeQADJAQ";
+    public static final String LUNN_NAME = "Лунные тени";
     public static final String ZVEZDA_PICTURE = "AgACAgIAAxkBAAICG2KV6b_hGJ0jk_yHtzUWmfXrs0K-AALBuTEbgvKxSE55vwxxNxcxAQADAgADeQADJAQ";
+    public static final String ZVEZDA_NAME = "Звезда";
     public static final String PON_PICTURE = "AgACAgIAAxkBAAICI2KV6u5ALDMcSPP4WPsvdr5iBJ1hAALGuTEbgvKxSGlGhmGbA1qtAQADAgADeQADJAQ";
-    String BOOK;
-    String BOOK_CAPTION;
+    public static final String PON_NAME = "Понимания ноль";
+    String BOOK_PHOTO;
+    String BOOK_NAME;
+    String BOOK_DISC;
 
     @Override
     public String getBotUsername() {
@@ -62,49 +88,48 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         } else if (update.hasCallbackQuery()) {
             Message backMessage = update.getCallbackQuery().getMessage();
             if (update.getCallbackQuery().getData().equals("NextBook")) {
-                if (backMessage.getCaption().contains("Параллельно задавая вопрос")) {
-                    BOOK = POD_PICTURE;
-                    BOOK_CAPTION = "Под покровом единства\nОписание";
-                } else if (backMessage.getCaption().contains("Под покровом единства")) {
-                    BOOK = KORR_PICTURE;
-                    BOOK_CAPTION = "Корректировка\nОписание";
-                } else if (backMessage.getCaption().contains("Корректировка")) {
-                    BOOK = LUNN_PICTURE;
-                    BOOK_CAPTION = "Лунные тени\nОписание";
-                } else if (backMessage.getCaption().contains("Лунные тени")) {
-                    BOOK = ZVEZDA_PICTURE;
-                    BOOK_CAPTION = "Звезда\nОписание";
-                } else if (backMessage.getCaption().contains("Звезда")) {
-                    BOOK = PON_PICTURE;
-                    BOOK_CAPTION = "Понимания ноль\nОписание";
-                } else if (backMessage.getCaption().contains("Понимания ноль")) {
-                    BOOK = PZV_PICTURE;
-                    BOOK_CAPTION = "Параллельно задавая вопрос\nОписание";
+                if (backMessage.getCaption().contains(PVZ_NAME)) {
+                    whichBook(POD_PICTURE, POD_NAME, POD_DISC);
+                } else if (backMessage.getCaption().contains(POD_NAME)) {
+                    whichBook(KORR_PICTURE, KORR_NAME, KORR_DISC);
+                }
+/*                } else if (backMessage.getCaption().contains(KORR_NAME)) {
+                    BOOK_PHOTO = LUNN_PICTURE;
+                    BOOK_CAPTION = LUNN_NAME + "\nОписание";
+                } else if (backMessage.getCaption().contains(LUNN_NAME)) {
+                    BOOK_PHOTO = ZVEZDA_PICTURE;
+                    BOOK_CAPTION = ZVEZDA_NAME + "\nОписание";
+                } else if (backMessage.getCaption().contains(ZVEZDA_NAME)) {
+                    BOOK_PHOTO = PON_PICTURE;
+                    BOOK_CAPTION = PON_NAME + "\nОписание";
+                } else if (backMessage.getCaption().contains(PON_NAME)) {
+                    BOOK_PHOTO = PZV_PICTURE;
+                    BOOK_CAPTION = PVZ_NAME + "\nОписание";
                 }
             } else if (update.getCallbackQuery().getData().equals("PreviousBook")) {
-                if (backMessage.getCaption().contains("Параллельно задавая вопрос")) {
-                    BOOK = PON_PICTURE;
-                    BOOK_CAPTION = "Понимания ноль\nОписание";
-                } else if (backMessage.getCaption().contains("Под покровом единства")) {
-                    BOOK = PZV_PICTURE;
-                    BOOK_CAPTION = "Параллельно задавая вопрос\nОписание";
-                } else if (backMessage.getCaption().contains("Корректировка")) {
-                    BOOK = POD_PICTURE;
-                    BOOK_CAPTION = "Под покровом единства\nОписание";
-                } else if (backMessage.getCaption().contains("Лунные тени")) {
-                    BOOK = KORR_PICTURE;
-                    BOOK_CAPTION = "Корректировка\nОписание";
-                } else if (backMessage.getCaption().contains("Звезда")) {
-                    BOOK = LUNN_PICTURE;
-                    BOOK_CAPTION = "Лунные тени\nОписание";
-                } else if (backMessage.getCaption().contains("Понимания ноль")) {
-                    BOOK = ZVEZDA_PICTURE;
-                    BOOK_CAPTION = "Звезда\nОписание";
-                }
+                if (backMessage.getCaption().contains(PVZ_NAME)) {
+                    BOOK_PHOTO = PON_PICTURE;
+                    BOOK_CAPTION = PON_NAME + "\nОписание";
+                } else if (backMessage.getCaption().contains(POD_NAME)) {
+                    BOOK_PHOTO = PZV_PICTURE;
+                    BOOK_CAPTION = PVZ_NAME + "\nОписание";
+                } else if (backMessage.getCaption().contains(KORR_NAME)) {
+                    BOOK_PHOTO = POD_PICTURE;
+                    BOOK_CAPTION = POD_NAME + "\nОписание";
+                } else if (backMessage.getCaption().contains(LUNN_NAME)) {
+                    BOOK_PHOTO = KORR_PICTURE;
+                    BOOK_CAPTION = KORR_NAME + "\nОписание";
+                } else if (backMessage.getCaption().contains(ZVEZDA_NAME)) {
+                    BOOK_PHOTO = LUNN_PICTURE;
+                    BOOK_CAPTION = LUNN_NAME + "\nОписание";
+                } else if (backMessage.getCaption().contains(PON_NAME)) {
+                    BOOK_PHOTO = ZVEZDA_PICTURE;
+                    BOOK_CAPTION = ZVEZDA_NAME + "\nОписание";
+                }*/
             }
             InputMedia photo = new InputMediaPhoto();
-            photo.setMedia(BOOK);
-            photo.setCaption(BOOK_CAPTION);
+            photo.setMedia(BOOK_PHOTO);
+            photo.setCaption(BOOK_NAME + "\n" + BOOK_DISC);
             EditMessageMedia replacePhoto = new EditMessageMedia();
             replacePhoto.setMedia(photo);
             replacePhoto.setChatId(backMessage.getChatId().toString());
@@ -130,6 +155,13 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             }
         }
     }
+
+    private void whichBook(String photo, String name, String describe) {
+        BOOK_PHOTO = photo;
+        BOOK_NAME = name;
+        BOOK_DISC = describe;
+    }
+
     private void createMessage(Message message, String text) {
         String user_first_name = message.getChat().getFirstName();
         String user_last_name = message.getChat().getLastName();
@@ -211,17 +243,6 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         createInlineKeyBoard(message, createPhoto);
     }
 
-    /* hg   private void editPhoto(Message message, EditMessageMedia replacePhoto) {
-            replacePhoto.setChatId(message.getChatId().toString());
-            if (message.getReplyMarkup().getKeyboard().get(0).get(0).getCallbackData().equals("NextBook")) {
-                InputMedia photoE = new InputMediaPhoto();
-                photoE.setMedia(POD_PICTURE);
-
-            } else {
-
-            }
-            createInlineKeyBoard(message, editPhoto);
-        }*/
     private void createInlineKeyBoard(Message message, SendPhoto createPhoto) {
         InlineKeyboardMarkup inlineKeyBoard = new InlineKeyboardMarkup();
         InlineKeyboardButton inlineKeyBoardButton = new InlineKeyboardButton();
@@ -250,6 +271,17 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     }
 
 }
+    /* hg   private void editPhoto(Message message, EditMessageMedia replacePhoto) {
+            replacePhoto.setChatId(message.getChatId().toString());
+            if (message.getReplyMarkup().getKeyboard().get(0).get(0).getCallbackData().equals("NextBook")) {
+                InputMedia photoE = new InputMediaPhoto();
+                photoE.setMedia(POD_PICTURE);
+
+            } else {
+
+            }
+            createInlineKeyBoard(message, editPhoto);
+        }*/
 /*        } else if (update.hasMessage() && update.getMessage().hasPhoto()) {
                 long chat_id = update.getMessage().getChatId();
                 List<PhotoSize> photos = update.getMessage().getPhoto();
@@ -279,3 +311,13 @@ createMessage(message, "*Добро* _пожаловать_ " + message.getFrom(
         " поэтому ```некоторые``` __ответы__ от [Dante](tg://user?id=411435416) меня будут сюрпризом\\. Если ты их не любишь\\, то просто" +
         " воспользуйся `моей` клавиатурой внизу");
         */
+            /*few ArrayList<String> array1 = new ArrayList<String>();
+            array1.add(PZV_PICTURE);
+            array1.add(POD_PICTURE);
+            array1.add(KORR_PICTURE);
+            array1.add(LUNN_PICTURE);
+            array1.add(ZVEZDA_PICTURE);
+            array1.add(PON_PICTURE);
+            for (String i:array1) {
+                System.out.println(i);
+            }*/
