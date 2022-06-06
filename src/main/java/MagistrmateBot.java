@@ -28,11 +28,8 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     public static final String LUNN_PICTURE = "AgACAgIAAxkBAAICH2KV6lrfNbsYfnqVDQwV1uhexKUGAALDuTEbgvKxSBEP75XimlVwAQADAgADeQADJAQ";
     public static final String ZVEZDA_PICTURE = "AgACAgIAAxkBAAICG2KV6b_hGJ0jk_yHtzUWmfXrs0K-AALBuTEbgvKxSE55vwxxNxcxAQADAgADeQADJAQ";
     public static final String PON_PICTURE = "AgACAgIAAxkBAAICI2KV6u5ALDMcSPP4WPsvdr5iBJ1hAALGuTEbgvKxSGlGhmGbA1qtAQADAgADeQADJAQ";
-    String NEXT_BOOK;
-    String NEXT_BOOK_CAPTION;
-    String BACK_BOOK;
-    String BACK_BOOK_CAPTION;
-    String WHICH_BOOK;
+    String BOOK;
+    String BOOK_CAPTION;
 
     @Override
     public String getBotUsername() {
@@ -64,55 +61,58 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 createMessage(message, "Даже не знаю, что на это ответить");
         } else if (update.hasCallbackQuery()) {
             Message backMessage = update.getCallbackQuery().getMessage();
-            //if (backMessage.getText().equals("PZV_PICTURE"))
-            //if (update.getCallbackQuery().getData().equals("PZV_PICTURE")) {
-            if (backMessage.getCaption().equals("PZV_PICTURE")) {
-                NEXT_BOOK = POD_PICTURE;
-                NEXT_BOOK_CAPTION = "POD_PICTURE";
-                BACK_BOOK = PZV_PICTURE;
-                BACK_BOOK_CAPTION = "PZV_PICTURE";
-            } else if (backMessage.getCaption().equals("POD_PICTURE")) {
-                NEXT_BOOK = KORR_PICTURE;
-                NEXT_BOOK_CAPTION = "KORR_PICTURE";
-                BACK_BOOK = POD_PICTURE;
-                BACK_BOOK_CAPTION = "POD_PICTURE";
-            } else if (backMessage.getCaption().equals("KORR_PICTURE")) {
-                NEXT_BOOK = LUNN_PICTURE;
-                NEXT_BOOK_CAPTION = "LUNN_PICTURE";
-                BACK_BOOK = KORR_PICTURE;
-                BACK_BOOK_CAPTION = "KORR_PICTURE";
-            } else if (backMessage.getCaption().equals("LUNN_PICTURE")) {
-                NEXT_BOOK = ZVEZDA_PICTURE;
-                NEXT_BOOK_CAPTION = "ZVEZDA_PICTURE";
-                BACK_BOOK = LUNN_PICTURE;
-                BACK_BOOK_CAPTION = "LUNN_PICTURE";
-            } else if (backMessage.getCaption().equals("ZVEZDA_PICTURE")) {
-                NEXT_BOOK = PON_PICTURE;
-                NEXT_BOOK_CAPTION = "PON_PICTURE";
-                BACK_BOOK = ZVEZDA_PICTURE;
-                BACK_BOOK_CAPTION = "ZVEZDA_PICTURE";
-            } else if (backMessage.getCaption().equals("PON_PICTURE")) {
-                NEXT_BOOK = PZV_PICTURE;
-                NEXT_BOOK_CAPTION = "PZV_PICTURE";
-                BACK_BOOK = PON_PICTURE;
-                BACK_BOOK_CAPTION = "PON_PICTURE";
-            }
-            EditMessageMedia replacePhoto = new EditMessageMedia();
             if (update.getCallbackQuery().getData().equals("NextBook")) {
-                WHICH_BOOK = NEXT_BOOK;
-            } else if (update.getCallbackQuery().getData().equals("BackBook")) {
-                WHICH_BOOK = BACK_BOOK;
+                if (backMessage.getCaption().contains("Параллельно задавая вопрос")) {
+                    BOOK = POD_PICTURE;
+                    BOOK_CAPTION = "Под покровом единства\nОписание";
+                } else if (backMessage.getCaption().contains("Под покровом единства")) {
+                    BOOK = KORR_PICTURE;
+                    BOOK_CAPTION = "Корректировка\nОписание";
+                } else if (backMessage.getCaption().contains("Корректировка")) {
+                    BOOK = LUNN_PICTURE;
+                    BOOK_CAPTION = "Лунные тени\nОписание";
+                } else if (backMessage.getCaption().contains("Лунные тени")) {
+                    BOOK = ZVEZDA_PICTURE;
+                    BOOK_CAPTION = "Звезда\nОписание";
+                } else if (backMessage.getCaption().contains("Звезда")) {
+                    BOOK = PON_PICTURE;
+                    BOOK_CAPTION = "Понимания ноль\nОписание";
+                } else if (backMessage.getCaption().contains("Понимания ноль")) {
+                    BOOK = PZV_PICTURE;
+                    BOOK_CAPTION = "Параллельно задавая вопрос\nОписание";
+                }
+            } else if (update.getCallbackQuery().getData().equals("PreviousBook")) {
+                if (backMessage.getCaption().contains("Параллельно задавая вопрос")) {
+                    BOOK = PON_PICTURE;
+                    BOOK_CAPTION = "Понимания ноль\nОписание";
+                } else if (backMessage.getCaption().contains("Под покровом единства")) {
+                    BOOK = PZV_PICTURE;
+                    BOOK_CAPTION = "Параллельно задавая вопрос\nОписание";
+                } else if (backMessage.getCaption().contains("Корректировка")) {
+                    BOOK = POD_PICTURE;
+                    BOOK_CAPTION = "Под покровом единства\nОписание";
+                } else if (backMessage.getCaption().contains("Лунные тени")) {
+                    BOOK = KORR_PICTURE;
+                    BOOK_CAPTION = "Корректировка\nОписание";
+                } else if (backMessage.getCaption().contains("Звезда")) {
+                    BOOK = LUNN_PICTURE;
+                    BOOK_CAPTION = "Лунные тени\nОписание";
+                } else if (backMessage.getCaption().contains("Понимания ноль")) {
+                    BOOK = ZVEZDA_PICTURE;
+                    BOOK_CAPTION = "Звезда\nОписание";
+                }
             }
             InputMedia photo = new InputMediaPhoto();
-            photo.setMedia(WHICH_BOOK);
-            photo.setCaption(NEXT_BOOK_CAPTION);
+            photo.setMedia(BOOK);
+            photo.setCaption(BOOK_CAPTION);
+            EditMessageMedia replacePhoto = new EditMessageMedia();
             replacePhoto.setMedia(photo);
             replacePhoto.setChatId(backMessage.getChatId().toString());
             replacePhoto.setMessageId(Integer.valueOf(backMessage.getMessageId().toString()));
             InlineKeyboardMarkup inlineKeyBoard = new InlineKeyboardMarkup();
             InlineKeyboardButton inlineKeyBoardButton1 = new InlineKeyboardButton();
             inlineKeyBoardButton1.setText("Предыдущая книга");
-            inlineKeyBoardButton1.setCallbackData("BackBook");
+            inlineKeyBoardButton1.setCallbackData("PreviousBook");
             InlineKeyboardButton inlineKeyBoardButton2 = new InlineKeyboardButton();
             inlineKeyBoardButton2.setText("Следующая книга");
             inlineKeyBoardButton2.setCallbackData("NextBook");
@@ -129,9 +129,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 e.printStackTrace();
             }
         }
-
     }
-
     private void createMessage(Message message, String text) {
         String user_first_name = message.getChat().getFirstName();
         String user_last_name = message.getChat().getLastName();
@@ -209,7 +207,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         SendPhoto createPhoto = new SendPhoto();
         createPhoto.setChatId(message.getChatId().toString());
         createPhoto.setPhoto(new InputFile(PZV_PICTURE));
-        createPhoto.setCaption("PZV_PICTURE");
+        createPhoto.setCaption("Параллельно задавая вопрос");
         createInlineKeyBoard(message, createPhoto);
     }
 
