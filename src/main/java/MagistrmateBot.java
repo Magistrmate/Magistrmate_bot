@@ -16,7 +16,10 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 public class MagistrmateBot extends TelegramLongPollingBot {
     public static final String PZV_PICTURE = "AgACAgIAAxkBAAIBx2KTdP4CNbqTZfv7Hm7TqGAugkdSAAKIvjEbUaqZSPwL-Up482owAQADAgADeQADJAQ";
@@ -27,8 +30,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     public static final String PON_PICTURE = "AgACAgIAAxkBAAICI2KV6u5ALDMcSPP4WPsvdr5iBJ1hAALGuTEbgvKxSGlGhmGbA1qtAQADAgADeQADJAQ";
     String NEXT_BOOK;
     String NEXT_BOOK_CAPTION;
-
-
+    String BACK_BOOK;
+    String BACK_BOOK_CAPTION;
+    String WHICH_BOOK;
 
     @Override
     public String getBotUsername() {
@@ -60,35 +64,56 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 createMessage(message, "Даже не знаю, что на это ответить");
         } else if (update.hasCallbackQuery()) {
             Message backMessage = update.getCallbackQuery().getMessage();
-            if (update.getCallbackQuery().getData().equals("NextBook")) {
+            if (update.getCallbackQuery().getData().equals("PZV_PICTURE")) {
                 NEXT_BOOK = POD_PICTURE;
                 NEXT_BOOK_CAPTION = "POD_PICTURE";
+                BACK_BOOK = PZV_PICTURE;
+                BACK_BOOK_CAPTION = "PZV_PICTURE";
             } else if (update.getCallbackQuery().getData().equals("POD_PICTURE")) {
                 NEXT_BOOK = KORR_PICTURE;
                 NEXT_BOOK_CAPTION = "KORR_PICTURE";
+                BACK_BOOK = POD_PICTURE;
+                BACK_BOOK_CAPTION = "POD_PICTURE";
             } else if (update.getCallbackQuery().getData().equals("KORR_PICTURE")) {
                 NEXT_BOOK = LUNN_PICTURE;
                 NEXT_BOOK_CAPTION = "LUNN_PICTURE";
+                BACK_BOOK = KORR_PICTURE;
+                BACK_BOOK_CAPTION = "KORR_PICTURE";
             } else if (update.getCallbackQuery().getData().equals("LUNN_PICTURE")) {
                 NEXT_BOOK = ZVEZDA_PICTURE;
                 NEXT_BOOK_CAPTION = "ZVEZDA_PICTURE";
+                BACK_BOOK = LUNN_PICTURE;
+                BACK_BOOK_CAPTION = "LUNN_PICTURE";
             } else if (update.getCallbackQuery().getData().equals("ZVEZDA_PICTURE")) {
                 NEXT_BOOK = PON_PICTURE;
                 NEXT_BOOK_CAPTION = "PON_PICTURE";
-            } else if (update.getCallbackQuery().getData().equals("PON_PICTURE")){
+                BACK_BOOK = ZVEZDA_PICTURE;
+                BACK_BOOK_CAPTION = "ZVEZDA_PICTURE";
+            } else if (update.getCallbackQuery().getData().equals("PON_PICTURE")) {
                 NEXT_BOOK = PZV_PICTURE;
-                NEXT_BOOK_CAPTION = "NextBook";
+                NEXT_BOOK_CAPTION = "PZV_PICTURE";
+                BACK_BOOK = PON_PICTURE;
+                BACK_BOOK_CAPTION = "PON_PICTURE";
             }
             EditMessageMedia replacePhoto = new EditMessageMedia();
-            replacePhoto.setMedia(new InputMediaPhoto(NEXT_BOOK));
+            if (backMessage.getReplyMarkup().getKeyboard().get(0).get(0).getText().equals("Следующая книга")) {
+                WHICH_BOOK = NEXT_BOOK;
+            } else if (backMessage.getReplyMarkup().getKeyboard().get(0).get(0).getText().equals("Предыдущая книга")) {
+                WHICH_BOOK = BACK_BOOK;
+            }
+            replacePhoto.setMedia(new InputMediaPhoto(WHICH_BOOK));
             replacePhoto.setChatId(backMessage.getChatId().toString());
             replacePhoto.setMessageId(Integer.valueOf(backMessage.getMessageId().toString()));
             InlineKeyboardMarkup inlineKeyBoard = new InlineKeyboardMarkup();
-            InlineKeyboardButton inlineKeyBoardButton = new InlineKeyboardButton();
-            inlineKeyBoardButton.setText("Следующая книга");
-            inlineKeyBoardButton.setCallbackData(NEXT_BOOK_CAPTION);
+            InlineKeyboardButton inlineKeyBoardButton1 = new InlineKeyboardButton();
+            inlineKeyBoardButton1.setText("Предыдущая книга");
+            inlineKeyBoardButton1.setCallbackData(BACK_BOOK_CAPTION);
+            InlineKeyboardButton inlineKeyBoardButton2 = new InlineKeyboardButton();
+            inlineKeyBoardButton2.setText("Следующая книга");
+            inlineKeyBoardButton2.setCallbackData(NEXT_BOOK_CAPTION);
             List<InlineKeyboardButton> row1 = new ArrayList<>();
-            row1.add(inlineKeyBoardButton);
+            row1.add(inlineKeyBoardButton1);
+            row1.add(inlineKeyBoardButton2);
             List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
             rowList.add(row1);
             inlineKeyBoard.setKeyboard(rowList);
@@ -99,6 +124,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 e.printStackTrace();
             }
         }
+
     }
 
     private void createMessage(Message message, String text) {
@@ -197,7 +223,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         InlineKeyboardMarkup inlineKeyBoard = new InlineKeyboardMarkup();
         InlineKeyboardButton inlineKeyBoardButton = new InlineKeyboardButton();
         inlineKeyBoardButton.setText("Следующая книга");
-        inlineKeyBoardButton.setCallbackData("NextBook");
+        inlineKeyBoardButton.setCallbackData("PZV_PICTURE");
         List<InlineKeyboardButton> row1 = new ArrayList<>();
         row1.add(inlineKeyBoardButton);
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
