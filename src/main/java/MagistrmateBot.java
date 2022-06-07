@@ -23,8 +23,8 @@ import java.util.Locale;
 
 public class MagistrmateBot extends TelegramLongPollingBot {
     public static final String PZV_PICTURE = "AgACAgIAAxkBAAIBx2KTdP4CNbqTZfv7Hm7TqGAugkdSAAKIvjEbUaqZSPwL-Up482owAQADAgADeQADJAQ";
-    public static final String PVZ_NAME = "Параллельно задавая вопрос";
-    public static final String PVZ_DISC = """
+    public static final String PZV_NAME = "Параллельно задавая вопрос";
+    public static final String PZV_DISC = """
             Сборник из пяти произведений. Подробные аннотации внутри.
             Под покровом единства.
             Существует вуз, где запрещена дружба, и всех обучают рассчитывать только на себя.
@@ -49,10 +49,21 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             "быть может, кто-то из твоих близких друзей всего лишь хорошо разыграл все карты несколько лет назад?";
     public static final String LUNN_PICTURE = "AgACAgIAAxkBAAICH2KV6lrfNbsYfnqVDQwV1uhexKUGAALDuTEbgvKxSBEP75XimlVwAQADAgADeQADJAQ";
     public static final String LUNN_NAME = "Лунные тени";
+    private static final String LUNN_DISC = "Общежитие при университете — особый период в жизни каждого человека." +
+            "Здесь происходит в основном много приятных событий, запоминающихся на всю жизнь. Однако судьбы трёх" +
+            "друзей это место однажды навсегда изменит. Им предстоит череда ночей, когда редко все оставались к " +
+            "утру живы. Что же делать в ситуации, когда врагом является твой спящий друг?";
     public static final String ZVEZDA_PICTURE = "AgACAgIAAxkBAAICG2KV6b_hGJ0jk_yHtzUWmfXrs0K-AALBuTEbgvKxSE55vwxxNxcxAQADAgADeQADJAQ";
     public static final String ZVEZDA_NAME = "Звезда";
+    private static final String ZVEZDA_DISC = "Детские мечты не всегда сбываются так, как вы того хотели. " +
+            "Кирили, обычный парень, которому предстоит испытать невероятные впечатления, когда он всё же сможет " +
+            "прикоснуться к своей мечте. Сможет ли он совладать с человеческими пороками и спасти Землю от уничтожения?";
     public static final String PON_PICTURE = "AgACAgIAAxkBAAICI2KV6u5ALDMcSPP4WPsvdr5iBJ1hAALGuTEbgvKxSGlGhmGbA1qtAQADAgADeQADJAQ";
     public static final String PON_NAME = "Понимания ноль";
+    private static final String PON_DISC = "Привет. Я тут рассказал неординарную историю нашего путешествия и " +
+            "немного о нашем мире. Представляете, у нас дружба между парнем и девушкой возможна. Причем на " +
+            "законодательном уровне. Мы начинаем обладать особыми силами, но это уже подробнее внутри. Возможно, " +
+            "ваша жизненная ситуация похожа на нашу, и вы являетесь таким другом противоположному себе полу, а?";
     String BOOK_PHOTO;
     String BOOK_NAME;
     String BOOK_DISC;
@@ -88,25 +99,20 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         } else if (update.hasCallbackQuery()) {
             Message backMessage = update.getCallbackQuery().getMessage();
             if (update.getCallbackQuery().getData().equals("NextBook")) {
-                if (backMessage.getCaption().contains(PVZ_NAME)) {
+                if (backMessage.getCaption().contains(PZV_NAME)) {
                     whichBook(POD_PICTURE, POD_NAME, POD_DISC);
                 } else if (backMessage.getCaption().contains(POD_NAME)) {
                     whichBook(KORR_PICTURE, KORR_NAME, KORR_DISC);
-                }
-/*                } else if (backMessage.getCaption().contains(KORR_NAME)) {
-                    BOOK_PHOTO = LUNN_PICTURE;
-                    BOOK_CAPTION = LUNN_NAME + "\nОписание";
+                } else if (backMessage.getCaption().contains(KORR_NAME)) {
+                    whichBook(LUNN_PICTURE, LUNN_NAME, LUNN_DISC);
                 } else if (backMessage.getCaption().contains(LUNN_NAME)) {
-                    BOOK_PHOTO = ZVEZDA_PICTURE;
-                    BOOK_CAPTION = ZVEZDA_NAME + "\nОписание";
+                    whichBook(ZVEZDA_PICTURE, ZVEZDA_NAME, ZVEZDA_DISC);
                 } else if (backMessage.getCaption().contains(ZVEZDA_NAME)) {
-                    BOOK_PHOTO = PON_PICTURE;
-                    BOOK_CAPTION = PON_NAME + "\nОписание";
+                    whichBook(PON_PICTURE, PON_NAME, PON_DISC);
                 } else if (backMessage.getCaption().contains(PON_NAME)) {
-                    BOOK_PHOTO = PZV_PICTURE;
-                    BOOK_CAPTION = PVZ_NAME + "\nОписание";
+                    whichBook(PZV_PICTURE, PZV_NAME, PZV_DISC);
                 }
-            } else if (update.getCallbackQuery().getData().equals("PreviousBook")) {
+/*            } else if (update.getCallbackQuery().getData().equals("PreviousBook")) {
                 if (backMessage.getCaption().contains(PVZ_NAME)) {
                     BOOK_PHOTO = PON_PICTURE;
                     BOOK_CAPTION = PON_NAME + "\nОписание";
