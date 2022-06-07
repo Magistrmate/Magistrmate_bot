@@ -97,69 +97,78 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 createMessage(message, "Давайте вместе разберемся, чем я могу помочь");
         } else if (update.hasCallbackQuery()) {
             Message backMessage = update.getCallbackQuery().getMessage();
-            if (update.getCallbackQuery().getData().equals("NextBook")) {
-                if (backMessage.getCaption().contains(PZV_NAME)) {
-                    whichBook(POD_PICTURE, POD_NAME, POD_DISC);
-                } else if (backMessage.getCaption().contains(POD_NAME)) {
-                    whichBook(KORR_PICTURE, KORR_NAME, KORR_DISC);
-                } else if (backMessage.getCaption().contains(KORR_NAME)) {
-                    whichBook(LUNN_PICTURE, LUNN_NAME, LUNN_DISC);
-                } else if (backMessage.getCaption().contains(LUNN_NAME)) {
-                    whichBook(ZVEZDA_PICTURE, ZVEZDA_NAME, ZVEZDA_DISC);
-                } else if (backMessage.getCaption().contains(ZVEZDA_NAME)) {
-                    whichBook(PON_PICTURE, PON_NAME, PON_DISC);
-                } else if (backMessage.getCaption().contains(PON_NAME)) {
-                    whichBook(PZV_PICTURE, PZV_NAME, PZV_DISC);
+            if (update.getCallbackQuery().getData().equals("NextBook") ||
+                    update.getCallbackQuery().getData().equals("PreviousBook")) {
+                if (update.getCallbackQuery().getData().equals("NextBook")) {
+                    if (backMessage.getCaption().contains(PZV_NAME)) {
+                        whichBook(POD_PICTURE, POD_NAME, POD_DISC);
+                    } else if (backMessage.getCaption().contains(POD_NAME)) {
+                        whichBook(KORR_PICTURE, KORR_NAME, KORR_DISC);
+                    } else if (backMessage.getCaption().contains(KORR_NAME)) {
+                        whichBook(LUNN_PICTURE, LUNN_NAME, LUNN_DISC);
+                    } else if (backMessage.getCaption().contains(LUNN_NAME)) {
+                        whichBook(ZVEZDA_PICTURE, ZVEZDA_NAME, ZVEZDA_DISC);
+                    } else if (backMessage.getCaption().contains(ZVEZDA_NAME)) {
+                        whichBook(PON_PICTURE, PON_NAME, PON_DISC);
+                    } else if (backMessage.getCaption().contains(PON_NAME)) {
+                        whichBook(PZV_PICTURE, PZV_NAME, PZV_DISC);
+                    }
+                } else if (update.getCallbackQuery().getData().equals("PreviousBook")) {
+                    if (backMessage.getCaption().contains(PZV_NAME)) {
+                        whichBook(PON_PICTURE, PON_NAME, PON_DISC);
+                    } else if (backMessage.getCaption().contains(POD_NAME)) {
+                        whichBook(PZV_PICTURE, PZV_NAME, PZV_DISC);
+                    } else if (backMessage.getCaption().contains(KORR_NAME)) {
+                        whichBook(POD_PICTURE, POD_NAME, POD_DISC);
+                    } else if (backMessage.getCaption().contains(LUNN_NAME)) {
+                        whichBook(KORR_PICTURE, KORR_NAME, KORR_DISC);
+                    } else if (backMessage.getCaption().contains(ZVEZDA_NAME)) {
+                        whichBook(LUNN_PICTURE, LUNN_NAME, LUNN_DISC);
+                    } else if (backMessage.getCaption().contains(PON_NAME)) {
+                        whichBook(ZVEZDA_PICTURE, ZVEZDA_NAME, ZVEZDA_DISC);
+                    }
                 }
-            } else if (update.getCallbackQuery().getData().equals("PreviousBook")) {
-                if (backMessage.getCaption().contains(PZV_NAME)) {
-                    whichBook(PON_PICTURE, PON_NAME, PON_DISC);
-                } else if (backMessage.getCaption().contains(POD_NAME)) {
-                    whichBook(PZV_PICTURE, PZV_NAME, PZV_DISC);
-                } else if (backMessage.getCaption().contains(KORR_NAME)) {
-                    whichBook(POD_PICTURE, POD_NAME, POD_DISC);
-                } else if (backMessage.getCaption().contains(LUNN_NAME)) {
-                    whichBook(KORR_PICTURE, KORR_NAME, KORR_DISC);
-                } else if (backMessage.getCaption().contains(ZVEZDA_NAME)) {
-                    whichBook(LUNN_PICTURE, LUNN_NAME, LUNN_DISC);
-                } else if (backMessage.getCaption().contains(PON_NAME)) {
-                    whichBook(ZVEZDA_PICTURE, ZVEZDA_NAME, ZVEZDA_DISC);
+                InputMedia photo = new InputMediaPhoto();
+                photo.setMedia(BOOK_PHOTO);
+                photo.setCaption("*" + BOOK_NAME + "*\n" + BOOK_DISC);
+                photo.setParseMode(ParseMode.MARKDOWNV2);
+                EditMessageMedia replacePhoto = new EditMessageMedia();
+                replacePhoto.setMedia(photo);
+                replacePhoto.setChatId(backMessage.getChatId().toString());
+                replacePhoto.setMessageId(Integer.valueOf(backMessage.getMessageId().toString()));
+                InlineKeyboardMarkup inlineKeyBoard = new InlineKeyboardMarkup();
+                InlineKeyboardButton inlineKeyBoardButton1 = new InlineKeyboardButton();
+                inlineKeyBoardButton1.setText("Предыдущая книга");
+                inlineKeyBoardButton1.setCallbackData("PreviousBook");
+                InlineKeyboardButton inlineKeyBoardButton2 = new InlineKeyboardButton();
+                inlineKeyBoardButton2.setText("Следующая книга");
+                inlineKeyBoardButton2.setCallbackData("NextBook");
+                InlineKeyboardButton inlineKeyBoardButton3 = new InlineKeyboardButton();
+                inlineKeyBoardButton3.setText("Отрывок из книги");
+                inlineKeyBoardButton3.setCallbackData("ExcerptBook");
+                List<InlineKeyboardButton> row1 = new ArrayList<>();
+                row1.add(inlineKeyBoardButton1);
+                row1.add(inlineKeyBoardButton2);
+                List<InlineKeyboardButton> row2 = new ArrayList<>();
+                row2.add(inlineKeyBoardButton3);
+                List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
+                rowList.add(row1);
+                rowList.add(row2);
+                inlineKeyBoard.setKeyboard(rowList);
+                replacePhoto.setReplyMarkup(inlineKeyBoard);
+                try {
+                    execute(replacePhoto);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
                 }
             } else if (update.getCallbackQuery().getData().equals("ExcerptBook")) {
-                System.out.println("OK");
-            }
-            InputMedia photo = new InputMediaPhoto();
-            photo.setMedia(BOOK_PHOTO);
-            photo.setCaption("*" + BOOK_NAME + "*\n" + BOOK_DISC);
-            photo.setParseMode(ParseMode.MARKDOWNV2);
-            EditMessageMedia replacePhoto = new EditMessageMedia();
-            replacePhoto.setMedia(photo);
-            replacePhoto.setChatId(backMessage.getChatId().toString());
-            replacePhoto.setMessageId(Integer.valueOf(backMessage.getMessageId().toString()));
-            InlineKeyboardMarkup inlineKeyBoard = new InlineKeyboardMarkup();
-            InlineKeyboardButton inlineKeyBoardButton1 = new InlineKeyboardButton();
-            inlineKeyBoardButton1.setText("Предыдущая книга");
-            inlineKeyBoardButton1.setCallbackData("PreviousBook");
-            InlineKeyboardButton inlineKeyBoardButton2 = new InlineKeyboardButton();
-            inlineKeyBoardButton2.setText("Следующая книга");
-            inlineKeyBoardButton2.setCallbackData("NextBook");
-            InlineKeyboardButton inlineKeyBoardButton3 = new InlineKeyboardButton();
-            inlineKeyBoardButton3.setText("Отрывок из книги");
-            inlineKeyBoardButton3.setCallbackData("ExcerptBook");
-            List<InlineKeyboardButton> row1 = new ArrayList<>();
-            row1.add(inlineKeyBoardButton1);
-            row1.add(inlineKeyBoardButton2);
-            List<InlineKeyboardButton> row2 = new ArrayList<>();
-            row2.add(inlineKeyBoardButton3);
-            List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
-            rowList.add(row1);
-            rowList.add(row2);
-            inlineKeyBoard.setKeyboard(rowList);
-            replacePhoto.setReplyMarkup(inlineKeyBoard);
-            try {
-                execute(replacePhoto);
-            } catch (TelegramApiException e) {
-                e.printStackTrace();
+                System.out.println("EPUB");
+                System.out.println("FB2");
+                System.out.println("PDF");
+                System.out.println("Online");
+                System.out.println("Текст в картинках");
+
+
             }
         }
     }
