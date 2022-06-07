@@ -89,7 +89,8 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         " поэтому пишите и если не пойму, то выдам вам подсказки\\.");
             } else if (update.getMessage().getText().toLowerCase(Locale.ROOT).contains("привет")) {
                 createMessage(message, "Дороу");
-            } else if (update.getMessage().getText().toLowerCase(Locale.ROOT).contains("книг")) {
+            } else if (update.getMessage().getText().toLowerCase(Locale.ROOT).contains("книг") ||
+                    update.getMessage().getText().toLowerCase(Locale.ROOT).contains("книж")) {
                 createMediaGroup(message);
                 createPhoto(message);
             } else
@@ -124,6 +125,8 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 } else if (backMessage.getCaption().contains(PON_NAME)) {
                     whichBook(ZVEZDA_PICTURE, ZVEZDA_NAME, ZVEZDA_DISC);
                 }
+            } else if (update.getCallbackQuery().getData().equals("ExcerptBook")) {
+                System.out.println("OK");
             }
             InputMedia photo = new InputMediaPhoto();
             photo.setMedia(BOOK_PHOTO);
@@ -140,11 +143,17 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             InlineKeyboardButton inlineKeyBoardButton2 = new InlineKeyboardButton();
             inlineKeyBoardButton2.setText("Следующая книга");
             inlineKeyBoardButton2.setCallbackData("NextBook");
+            InlineKeyboardButton inlineKeyBoardButton3 = new InlineKeyboardButton();
+            inlineKeyBoardButton3.setText("Отрывок из книги");
+            inlineKeyBoardButton3.setCallbackData("ExcerptBook");
             List<InlineKeyboardButton> row1 = new ArrayList<>();
             row1.add(inlineKeyBoardButton1);
             row1.add(inlineKeyBoardButton2);
+            List<InlineKeyboardButton> row2 = new ArrayList<>();
+            row2.add(inlineKeyBoardButton3);
             List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
             rowList.add(row1);
+            rowList.add(row2);
             inlineKeyBoard.setKeyboard(rowList);
             replacePhoto.setReplyMarkup(inlineKeyBoard);
             try {
@@ -252,13 +261,19 @@ public class MagistrmateBot extends TelegramLongPollingBot {
 
     private void createInlineKeyBoard(Message message, SendPhoto createPhoto) {
         InlineKeyboardMarkup inlineKeyBoard = new InlineKeyboardMarkup();
-        InlineKeyboardButton inlineKeyBoardButton = new InlineKeyboardButton();
-        inlineKeyBoardButton.setText("Следующая книга");
-        inlineKeyBoardButton.setCallbackData("NextBook");
+        InlineKeyboardButton inlineKeyBoardButton1 = new InlineKeyboardButton();
+        inlineKeyBoardButton1.setText("Следующая книга");
+        inlineKeyBoardButton1.setCallbackData("NextBook");
+        InlineKeyboardButton inlineKeyBoardButton2 = new InlineKeyboardButton();
+        inlineKeyBoardButton2.setText("Отрывок из книги");
+        inlineKeyBoardButton2.setCallbackData("ExcerptBook");
         List<InlineKeyboardButton> row1 = new ArrayList<>();
-        row1.add(inlineKeyBoardButton);
+        row1.add(inlineKeyBoardButton1);
+        List<InlineKeyboardButton> row2 = new ArrayList<>();
+        row2.add(inlineKeyBoardButton2);
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
         rowList.add(row1);
+        rowList.add(row2);
         inlineKeyBoard.setKeyboard(rowList);
         createPhoto.setChatId(message.getChatId().toString());
         createPhoto.setReplyMarkup(inlineKeyBoard);
