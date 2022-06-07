@@ -82,21 +82,18 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         Message message = update.getMessage();
-        if (update.hasMessage() && message.hasText()) {
-            String inputText = message.getText();
-            if (inputText.equals("/start")) {
+        if (update.hasMessage()) {
+            if (message.getText().equals("/start")) {
                 createMessage(message, "Добро пожаловать " + message.getFrom().getFirstName() + "\\!\n" +
-                        "Мы можем перейти сразу к книгам или пообщаться\\. Я пока в процессе познания вашего мира\\," +
-                        " поэтому некоторые ответы от меня будут сюрпризом\\. Если ты их не любишь\\, то просто" +
-                        " воспользуйся `моей` клавиатурой внизу");
-                //createInlineKeyBoard(message);
+                        "Мы можем перейти сразу к книгам или пообщаться\\. Я пока в процессе познания вашего мира," +
+                        " поэтому пишите и если не пойму, то выдам вам подсказки\\.");
             } else if (update.getMessage().getText().toLowerCase(Locale.ROOT).contains("привет")) {
                 createMessage(message, "Дороу");
-            } else if (update.getMessage().getText().toLowerCase(Locale.ROOT).contains("кни")) {
+            } else if (update.getMessage().getText().toLowerCase(Locale.ROOT).contains("книг")) {
                 createMediaGroup(message);
                 createPhoto(message);
             } else
-                createMessage(message, "Даже не знаю, что на это ответить");
+                createMessage(message, "Давайте вместе разберемся, чем я могу помочь");
         } else if (update.hasCallbackQuery()) {
             Message backMessage = update.getCallbackQuery().getMessage();
             if (update.getCallbackQuery().getData().equals("NextBook")) {
@@ -177,7 +174,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         createMessage.setText(text);
         createMessage.enableMarkdownV2(true);
 
-        createKeyBoard(createMessage);
+        if (text.equals("Давайте вместе разберемся, чем я могу помочь")) {
+            createKeyBoard(createMessage);
+        }
 
         try {
             execute(createMessage);
@@ -199,7 +198,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         keyboard.add(row2);
         createKeyBoard.setKeyboard(keyboard);
         createKeyBoard.setResizeKeyboard(true);
-        createKeyBoard.setOneTimeKeyboard(false);
+        createKeyBoard.setOneTimeKeyboard(true);
         createKeyBoard.setInputFieldPlaceholder("Общение");
         createKeyBoard.setSelective(true); //https://core.telegram.org/bots/api#replykeyboardmarkup
         createMessage.setReplyMarkup(createKeyBoard);
