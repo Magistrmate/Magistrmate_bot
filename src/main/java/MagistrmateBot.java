@@ -38,6 +38,13 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             Сказка о том, как на Землю упала Звезда\\.
             *Понимания ноль*
             Дружба между парнем и девушкой существует и поддерживается государством, давая им невероятные способности\\.""";
+    public static final String PZV_RIDERO = "https://ridero.ru/books/parallelno_zadavaya_vopros/";
+    public static final String PZV_LITRES = "https://www.litres.ru/daniil-apasov/parallelno-zadavaya-vopros-pod-pokrovom-edinstva-korrektirov/";
+    public static final String PZV_WILDBERRIES = "https://www.wildberries.ru/catalog/36734671/detail.aspx?targetUrl=SN";
+    public static final String PZV_OZON = "https://www.ozon.ru/product/parallelno-zadavaya-vopros-168137107/?sh=qwZ99MK_wQ";
+    public static final String PZV_ALIEXPRESS = "https://aliexpress.ru/item/1005002349414876.html?gatewayAdapt=glo2rus&sku_id=12000020229783418";
+    public static final String PZV_AMAZON = "https://www.amazon.com/dp/B084Q3G56J";
+
     public static final String POD_PICTURE = "AgACAgIAAxkBAAICIWKV6rrWZCfAVHeZRb600fEdhUUtAALFuTEbgvKxSGOQfTzAxJOgAQADAgADeQADJAQ";
     public static final String POD_NAME = "Под покровом единства";
     public static final String POD_DISC = "Никогда не задумывались, что друзья — это ваша слабость? Иногда вы" +
@@ -137,26 +144,26 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 replacePhoto.setMedia(photo);
                 replacePhoto.setChatId(backMessage.getChatId().toString());
                 replacePhoto.setMessageId(Integer.valueOf(backMessage.getMessageId().toString()));
-                InlineKeyboardMarkup inlineKeyBoard = new InlineKeyboardMarkup();
-                InlineKeyboardButton inlineKeyBoardButton1 = new InlineKeyboardButton();
-                inlineKeyBoardButton1.setText("Предыдущая книга");
-                inlineKeyBoardButton1.setCallbackData("PreviousBook");
-                InlineKeyboardButton inlineKeyBoardButton2 = new InlineKeyboardButton();
-                inlineKeyBoardButton2.setText("Следующая книга");
-                inlineKeyBoardButton2.setCallbackData("NextBook");
-                InlineKeyboardButton inlineKeyBoardButton3 = new InlineKeyboardButton();
-                inlineKeyBoardButton3.setText("Отрывок из книги");
-                inlineKeyBoardButton3.setCallbackData("ExcerptBook");
+                InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+                InlineKeyboardButton inlineKeyboardButton1 = new InlineKeyboardButton();
+                inlineKeyboardButton1.setText("Предыдущая книга");
+                inlineKeyboardButton1.setCallbackData("PreviousBook");
+                InlineKeyboardButton inlineKeyboardButton2 = new InlineKeyboardButton();
+                inlineKeyboardButton2.setText("Следующая книга");
+                inlineKeyboardButton2.setCallbackData("NextBook");
+                InlineKeyboardButton inlineKeyboardButton3 = new InlineKeyboardButton();
+                inlineKeyboardButton3.setText("Отрывок из книги");
+                inlineKeyboardButton3.setCallbackData("ExcerptBook");
                 List<InlineKeyboardButton> row1 = new ArrayList<>();
-                row1.add(inlineKeyBoardButton1);
-                row1.add(inlineKeyBoardButton2);
+                row1.add(inlineKeyboardButton1);
+                row1.add(inlineKeyboardButton2);
                 List<InlineKeyboardButton> row2 = new ArrayList<>();
-                row2.add(inlineKeyBoardButton3);
+                row2.add(inlineKeyboardButton3);
                 List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
                 rowList.add(row1);
                 rowList.add(row2);
-                inlineKeyBoard.setKeyboard(rowList);
-                replacePhoto.setReplyMarkup(inlineKeyBoard);
+                inlineKeyboard.setKeyboard(rowList);
+                replacePhoto.setReplyMarkup(inlineKeyboard);
                 try {
                     execute(replacePhoto);
                 } catch (TelegramApiException e) {
@@ -173,46 +180,46 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 EditMessageReplyMarkup keyboard = new EditMessageReplyMarkup();
                 keyboard.setChatId(backMessage.getChatId().toString());
                 keyboard.setMessageId(Integer.valueOf(backMessage.getMessageId().toString()));
-                InlineKeyboardMarkup inlineKeyBoard = new InlineKeyboardMarkup();
-                InlineKeyboardButton inlineKeyBoardButton1 = new InlineKeyboardButton();
-                inlineKeyBoardButton1.setText("Ridero");
-                inlineKeyBoardButton1.setUrl("https://ridero.ru/books/parallelno_zadavaya_vopros/");
-                InlineKeyboardButton inlineKeyBoardButton2 = new InlineKeyboardButton();
-                inlineKeyBoardButton2.setText("ЛитРес");
-                inlineKeyBoardButton2.setUrl("https://www.litres.ru/daniil-apasov/parallelno-zadavaya-vopros-pod-pokrovom-edinstva-korrektirov/");
-                InlineKeyboardButton inlineKeyBoardButton3 = new InlineKeyboardButton();
-                inlineKeyBoardButton3.setText("Wildberries");
-                inlineKeyBoardButton3.setUrl("https://www.wildberries.ru/catalog/36734671/detail.aspx?targetUrl=SN");
-                InlineKeyboardButton inlineKeyBoardButton4 = new InlineKeyboardButton();
-                inlineKeyBoardButton4.setText("Ozon");
-                inlineKeyBoardButton4.setUrl("https://www.ozon.ru/product/parallelno-zadavaya-vopros-168137107/?sh=qwZ99MK_wQ");
-                InlineKeyboardButton inlineKeyBoardButton5 = new InlineKeyboardButton();
-                inlineKeyBoardButton5.setText("AliExpress");
-                inlineKeyBoardButton5.setUrl("https://aliexpress.ru/item/1005002349414876.html?gatewayAdapt=glo2rus&sku_id=12000020229783418");
-                InlineKeyboardButton inlineKeyBoardButton6 = new InlineKeyboardButton();
-                inlineKeyBoardButton6.setText("Amazon");
-                inlineKeyBoardButton6.setUrl("https://www.amazon.com/dp/B084Q3G56J");
-                InlineKeyboardButton inlineKeyBoardButton7 = new InlineKeyboardButton();
-                inlineKeyBoardButton7.setText("Вернуться");
-                inlineKeyBoardButton7.setCallbackData("BackShopsBook");
+                InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+                InlineKeyboardButton inlineKeyboardButton1 = new InlineKeyboardButton();
+                inlineKeyboardButton1.setText("Ridero");
+                inlineKeyboardButton1.setUrl(PZV_RIDERO);
+                InlineKeyboardButton inlineKeyboardButton2 = new InlineKeyboardButton();
+                inlineKeyboardButton2.setText("ЛитРес");
+                inlineKeyboardButton2.setUrl(PZV_LITRES);
+                InlineKeyboardButton inlineKeyboardButton3 = new InlineKeyboardButton();
+                inlineKeyboardButton3.setText("Wildberries");
+                inlineKeyboardButton3.setUrl(PZV_WILDBERRIES);
+                InlineKeyboardButton inlineKeyboardButton4 = new InlineKeyboardButton();
+                inlineKeyboardButton4.setText("Ozon");
+                inlineKeyboardButton4.setUrl(PZV_OZON);
+                InlineKeyboardButton inlineKeyboardButton5 = new InlineKeyboardButton();
+                inlineKeyboardButton5.setText("AliExpress");
+                inlineKeyboardButton5.setUrl(PZV_ALIEXPRESS);
+                InlineKeyboardButton inlineKeyboardButton6 = new InlineKeyboardButton();
+                inlineKeyboardButton6.setText("Amazon");
+                inlineKeyboardButton6.setUrl(PZV_AMAZON);
+                InlineKeyboardButton inlineKeyboardButton7 = new InlineKeyboardButton();
+                inlineKeyboardButton7.setText("Вернуться");
+                inlineKeyboardButton7.setCallbackData("BackShopsBook");
                 List<InlineKeyboardButton> row1 = new ArrayList<>();
-                row1.add(inlineKeyBoardButton1);
+                row1.add(inlineKeyboardButton1);
                 List<InlineKeyboardButton> row2 = new ArrayList<>();
-                row2.add(inlineKeyBoardButton2);
-                row2.add(inlineKeyBoardButton3);
-                row2.add(inlineKeyBoardButton4);
+                row2.add(inlineKeyboardButton2);
+                row2.add(inlineKeyboardButton3);
+                row2.add(inlineKeyboardButton4);
                 List<InlineKeyboardButton> row3 = new ArrayList<>();
-                row3.add(inlineKeyBoardButton5);
-                row3.add(inlineKeyBoardButton6);
+                row3.add(inlineKeyboardButton5);
+                row3.add(inlineKeyboardButton6);
                 List<InlineKeyboardButton> row4 = new ArrayList<>();
-                row4.add(inlineKeyBoardButton7);
+                row4.add(inlineKeyboardButton7);
                 List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
                 rowList.add(row1);
                 rowList.add(row2);
                 rowList.add(row3);
                 rowList.add(row4);
-                inlineKeyBoard.setKeyboard(rowList);
-                keyboard.setReplyMarkup(inlineKeyBoard);
+                inlineKeyboard.setKeyboard(rowList);
+                keyboard.setReplyMarkup(inlineKeyboard);
                 try {
                     execute(keyboard);
                 } catch (TelegramApiException e) {
@@ -222,28 +229,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 EditMessageReplyMarkup backKeyboard = new EditMessageReplyMarkup();
                 backKeyboard.setChatId(backMessage.getChatId().toString());
                 backKeyboard.setMessageId(Integer.valueOf(backMessage.getMessageId().toString()));
-                InlineKeyboardMarkup inlineKeyBoard = new InlineKeyboardMarkup();
-                InlineKeyboardButton inlineKeyBoardButton1 = new InlineKeyboardButton();
-                inlineKeyBoardButton1.setText("Книга в магазинах");
-                inlineKeyBoardButton1.setCallbackData("ShopsBook");
-                InlineKeyboardButton inlineKeyBoardButton2 = new InlineKeyboardButton();
-                inlineKeyBoardButton2.setText("Следующая книга");
-                inlineKeyBoardButton2.setCallbackData("NextBook");
-                InlineKeyboardButton inlineKeyBoardButton3 = new InlineKeyboardButton();
-                inlineKeyBoardButton3.setText("Отрывок из книги");
-                inlineKeyBoardButton3.setCallbackData("ExcerptBook");
-                List<InlineKeyboardButton> row1 = new ArrayList<>();
-                row1.add(inlineKeyBoardButton1);
-                List<InlineKeyboardButton> row2 = new ArrayList<>();
-                row2.add(inlineKeyBoardButton2);
-                List<InlineKeyboardButton> row3 = new ArrayList<>();
-                row3.add(inlineKeyBoardButton3);
-                List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
-                rowList.add(row1);
-                rowList.add(row2);
-                rowList.add(row3);
-                inlineKeyBoard.setKeyboard(rowList);
-                backKeyboard.setReplyMarkup(inlineKeyBoard);
+                InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+                createFirstKeyboard(inlineKeyboard);
+                backKeyboard.setReplyMarkup(inlineKeyboard);
                 try {
                     execute(backKeyboard);
                 } catch (TelegramApiException e) {
@@ -273,7 +261,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         createMessage.enableMarkdownV2(true);
 
         if (text.equals("Давайте вместе разберемся, чем я могу помочь")) {
-            createKeyBoard(createMessage);
+            createKeyboard(createMessage);
         }
 
         try {
@@ -283,8 +271,8 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         }
     }
 
-    private void createKeyBoard(SendMessage createMessage) {
-        ReplyKeyboardMarkup createKeyBoard = new ReplyKeyboardMarkup();
+    private void createKeyboard(SendMessage createMessage) {
+        ReplyKeyboardMarkup createKeyboard = new ReplyKeyboardMarkup();
         List<KeyboardRow> keyboard = new ArrayList<>();
         KeyboardRow row1 = new KeyboardRow();
         row1.add("Книги");
@@ -294,12 +282,12 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         row2.add("Контакты");
         row2.add("Позвать оператора");
         keyboard.add(row2);
-        createKeyBoard.setKeyboard(keyboard);
-        createKeyBoard.setResizeKeyboard(true);
-        createKeyBoard.setOneTimeKeyboard(true);
-        createKeyBoard.setInputFieldPlaceholder("Общение");
-        createKeyBoard.setSelective(true); //https://core.telegram.org/bots/api#replykeyboardmarkup
-        createMessage.setReplyMarkup(createKeyBoard);
+        createKeyboard.setKeyboard(keyboard);
+        createKeyboard.setResizeKeyboard(true);
+        createKeyboard.setOneTimeKeyboard(true);
+        createKeyboard.setInputFieldPlaceholder("Общение");
+        createKeyboard.setSelective(true); //https://core.telegram.org/bots/api#replykeyboardmarkup
+        createMessage.setReplyMarkup(createKeyboard);
     }
 
     private void createMediaGroup(Message message) {
@@ -345,38 +333,36 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         createPhoto.setChatId(message.getChatId().toString());
         createPhoto.setPhoto(new InputFile(PZV_PICTURE));
         createPhoto.setCaption("*" + PZV_NAME + "*\n" + PZV_DISC);
-        createInlineKeyBoard(message, createPhoto);
-    }
-
-    private void createInlineKeyBoard(Message message, SendPhoto createPhoto) {
-        InlineKeyboardMarkup inlineKeyBoard = new InlineKeyboardMarkup();
-        InlineKeyboardButton inlineKeyBoardButton1 = new InlineKeyboardButton();
-        inlineKeyBoardButton1.setText("Книга в магазинах");
-        inlineKeyBoardButton1.setCallbackData("ShopsBook");
-        InlineKeyboardButton inlineKeyBoardButton2 = new InlineKeyboardButton();
-        inlineKeyBoardButton2.setText("Следующая книга");
-        inlineKeyBoardButton2.setCallbackData("NextBook");
-        InlineKeyboardButton inlineKeyBoardButton3 = new InlineKeyboardButton();
-        inlineKeyBoardButton3.setText("Отрывок из книги");
-        inlineKeyBoardButton3.setCallbackData("ExcerptBook");
-        List<InlineKeyboardButton> row1 = new ArrayList<>();
-        row1.add(inlineKeyBoardButton1);
-        List<InlineKeyboardButton> row2 = new ArrayList<>();
-        row2.add(inlineKeyBoardButton2);
-        List<InlineKeyboardButton> row3 = new ArrayList<>();
-        row3.add(inlineKeyBoardButton3);
-        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
-        rowList.add(row1);
-        rowList.add(row2);
-        rowList.add(row3);
-        inlineKeyBoard.setKeyboard(rowList);
-        createPhoto.setChatId(message.getChatId().toString());
-        createPhoto.setReplyMarkup(inlineKeyBoard);
+        InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+        createFirstKeyboard(inlineKeyboard);
+        createPhoto.setReplyMarkup(inlineKeyboard);
         try {
             execute(createPhoto);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+    }
+    public void createFirstKeyboard(InlineKeyboardMarkup inlineKeyboard){
+        InlineKeyboardButton inlineKeyboardButton1 = new InlineKeyboardButton();
+        inlineKeyboardButton1.setText("Книга в магазинах");
+        inlineKeyboardButton1.setCallbackData("ShopsBook");
+        InlineKeyboardButton inlineKeyboardButton2 = new InlineKeyboardButton();
+        inlineKeyboardButton2.setText("Следующая книга");
+        inlineKeyboardButton2.setCallbackData("NextBook");
+        InlineKeyboardButton inlineKeyboardButton3 = new InlineKeyboardButton();
+        inlineKeyboardButton3.setText("Отрывок из книги");
+        inlineKeyboardButton3.setCallbackData("ExcerptBook");
+        List<InlineKeyboardButton> row1 = new ArrayList<>();
+        row1.add(inlineKeyboardButton1);
+        List<InlineKeyboardButton> row2 = new ArrayList<>();
+        row2.add(inlineKeyboardButton2);
+        List<InlineKeyboardButton> row3 = new ArrayList<>();
+        row3.add(inlineKeyboardButton3);
+        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
+        rowList.add(row1);
+        rowList.add(row2);
+        rowList.add(row3);
+        inlineKeyboard.setKeyboard(rowList);
     }
 
     private void log(String first_name, String last_name, String user_username, String user_id, String txt, String bot_answer) {
@@ -397,7 +383,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             } else {
 
             }
-            createInlineKeyBoard(message, editPhoto);
+            createInlineKeyboard(message, editPhoto);
         }*/
 /*        } else if (update.hasMessage() && update.getMessage().hasPhoto()) {
                 long chat_id = update.getMessage().getChatId();
