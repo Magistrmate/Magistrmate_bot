@@ -90,23 +90,23 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         Message message = update.getMessage();
         if (update.hasMessage()) {
-            if (message.getText().equals("/start")) {
+            String text = message.getText().toLowerCase(Locale.ROOT);
+            if (text.equals("/start")) {
                 createMessage(message, "Добро пожаловать " + message.getFrom().getFirstName() + "\\!\n" +
                         "Мы можем перейти сразу к книгам или пообщаться\\. Я пока в процессе познания вашего мира," +
                         " поэтому пишите и если не пойму, то выдам вам подсказки\\.");
-            } else if (update.getMessage().getText().toLowerCase(Locale.ROOT).contains("привет")) {
+            } else if (text.contains("привет")) {
                 createMessage(message, "Дороу");
-            } else if (update.getMessage().getText().toLowerCase(Locale.ROOT).contains("книг") ||
-                    update.getMessage().getText().toLowerCase(Locale.ROOT).contains("книж")) {
+            } else if (text.contains("книг") || text.contains("книж")) {
                 createMediaGroup(message);
                 createPhoto(update, message);
             } else
                 createMessage(message, "Давайте вместе разберемся, чем я могу помочь");
         } else if (update.hasCallbackQuery()) {
             Message backMessage = update.getCallbackQuery().getMessage();
-            if (update.getCallbackQuery().getData().equals("NextBook") ||
-                    update.getCallbackQuery().getData().equals("PreviousBook")) {
-                if (update.getCallbackQuery().getData().equals("NextBook")) {
+            String backText = update.getCallbackQuery().getData();
+            if (backText.equals("NextBook") || backText.equals("PreviousBook")) {
+                if (backText.equals("NextBook")) {
                     if (backMessage.getCaption().contains(PZV_NAME)) {
                         whichBook(POD_COVER, POD_NAME, POD_DESC);
                     } else if (backMessage.getCaption().contains(POD_NAME)) {
@@ -120,7 +120,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     } else if (backMessage.getCaption().contains(PON_NAME)) {
                         whichBook(PZV_COVER, PZV_NAME, PZV_DESC);
                     }
-                } else if (update.getCallbackQuery().getData().equals("PreviousBook")) {
+                } else {
                     if (backMessage.getCaption().contains(PZV_NAME)) {
                         whichBook(PON_COVER, PON_NAME, PON_DESC);
                     } else if (backMessage.getCaption().contains(POD_NAME)) {
@@ -135,12 +135,12 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         whichBook(ZVEZDA_COVER, ZVEZDA_NAME, ZVEZDA_DESC);
                     }
                 }
-                InputMedia cover = new InputMediaPhoto();
-                cover.setMedia(BOOK_COVER);
-                cover.setCaption("*" + BOOK_NAME + "*\n" + BOOK_DESC);
-                cover.setParseMode(ParseMode.MARKDOWNV2);
+                InputMedia photo = new InputMediaPhoto();
+                photo.setMedia(BOOK_COVER);
+                photo.setCaption("*" + BOOK_NAME + "*\n" + BOOK_DESC);
+                photo.setParseMode(ParseMode.MARKDOWNV2);
                 EditMessageMedia replacePhoto = new EditMessageMedia();
-                replacePhoto.setMedia(cover);
+                replacePhoto.setMedia(photo);
                 replacePhoto.setChatId(backMessage.getChatId().toString());
                 replacePhoto.setMessageId(Integer.valueOf(backMessage.getMessageId().toString()));
                 InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
@@ -363,54 +363,3 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     }
 
 }
-    /* hg   private void editPhoto(Message message, EditMessageMedia replacePhoto) {
-            replacePhoto.setChatId(message.getChatId().toString());
-            if (message.getReplyMarkup().getKeyboard().get(0).get(0).getCallbackData().equals("NextBook")) {
-                InputMedia photoE = new InputMediaPhoto();
-                photoE.setMedia(POD_COVER);
-
-            } else {
-
-            }
-            createInlineKeyboard(message, editPhoto);
-        }*/
-/*        } else if (update.hasMessage() && update.getMessage().hasPhoto()) {
-                long chat_id = update.getMessage().getChatId();
-                List<PhotoSize> photos = update.getMessage().getPhoto();
-                String f_id = Objects.requireNonNull(photos.stream().max(Comparator.comparing(PhotoSize::getFileSize))
-                        .orElse(null)).getFileId();
-                String caption = "file_id: " + f_id;
-                SendPhoto msg = new SendPhoto();
-                msg.setPhoto(new InputFile(f_id));
-                msg.setChatId(String.valueOf(chat_id));
-                msg.setCaption(caption);
-                try {
-                    execute(msg);
-                } catch (TelegramApiException e) {
-                    e.printStackTrace();
-                }
-        }
-        */
-/*
-               EditMessageText newMessage = new EditMessageText();
-               newMessage.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
-               newMessage.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
-               newMessage.setText("Updated message text");
-               */
-/*
-https://core.telegram.org/bots/api#markdownv2-style
-createMessage(message, "*Добро* _пожаловать_ " + message.getFrom().getFirstName() + "\\!\n" +
-        "Мы можем ~перейти~ сразу к ||книгам|| или пообщаться\\. Я пока в [сайтик](http://www.example.com/) процессе познания вашего мира\\," +
-        " поэтому ```некоторые``` __ответы__ от [Dante](tg://user?id=411435416) меня будут сюрпризом\\. Если ты их не любишь\\, то просто" +
-        " воспользуйся `моей` клавиатурой внизу");
-        */
-            /*few ArrayList<String> array1 = new ArrayList<String>();
-            array1.add(PZV_COVER);
-            array1.add(POD_COVER);
-            array1.add(KORR_COVER);
-            array1.add(LUNN_COVER);
-            array1.add(ZVEZDA_COVER);
-            array1.add(PON_COVER);
-            for (String i:array1) {
-                System.out.println(i);
-            }*/
