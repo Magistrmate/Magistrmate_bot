@@ -1,3 +1,9 @@
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Projections;
+import org.bson.Document;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMediaGroup;
@@ -22,6 +28,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+
+import static com.mongodb.client.model.Filters.eq;
 
 public class MagistrmateBot extends TelegramLongPollingBot {
     public static final String PZV_COVER = "AgACAgIAAxkBAAIBx2KTdP4CNbqTZfv7Hm7TqGAugkdSAAKIvjEbUaqZSPwL-Up482owAQADAgADeQADJAQ";
@@ -88,6 +96,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
+        MongoClient mongoClient = MongoClients.create(BotConfig.DB_TOKEN);
+        MongoDatabase database = mongoClient.getDatabase("MagistrmateDatabase");
+        MongoCollection<Document> collection = database.getCollection("MagistrmateCollection");
         Message message = update.getMessage();
         if (update.hasMessage()) {
             String text = message.getText().toLowerCase(Locale.ROOT);
@@ -95,6 +106,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 createMessage(message, "Добро пожаловать " + message.getFrom().getFirstName() + "\\!\n" +
                         "Мы можем перейти сразу к книгам или пообщаться\\. Я пока в процессе познания вашего мира," +
                         " поэтому пишите и если не пойму, то выдам вам подсказки\\.");
+                Document doc = collection.find(eq("_id", "PZV")).first();
+                assert doc != null;
+                System.out.println(doc.getString("name"));
             } else if (text.contains("привет")) {
                 createMessage(message, "Дороу");
             } else if (text.contains("книг") || text.contains("книж")) {

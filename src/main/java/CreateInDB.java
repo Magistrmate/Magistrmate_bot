@@ -14,7 +14,7 @@ public class CreateInDB {
             MongoCollection<Document> collection = database.getCollection("MagistrmateCollection");
             try {
                 InsertOneResult result = collection.insertOne(new Document()
-                        .append("_id", new ObjectId())
+                        .append("_id", "PZV")
                         .append("name", "Параллельно задавая вопрос")
                         .append("cover", "AgACAgIAAxkBAAIBx2KTdP4CNbqTZfv7Hm7TqGAugkdSAAKIvjEbUaqZSPwL-Up482owAQADAgADeQADJAQ")
                         .append("description", """
