@@ -1,8 +1,4 @@
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.Projections;
+import com.mongodb.client.*;
 import org.bson.Document;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
@@ -24,10 +20,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -46,12 +39,12 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             Сказка о том, как на Землю упала Звезда\\.
             *Понимания ноль*
             Дружба между парнем и девушкой существует и поддерживается государством, давая им невероятные способности\\.""";
-    public static final String PZV_RIDERO = "https://ridero.ru/books/parallelno_zadavaya_vopros/";
-    public static final String PZV_LITRES = "https://www.litres.ru/daniil-apasov/parallelno-zadavaya-vopros-pod-pokrovom-edinstva-korrektirov/";
-    public static final String PZV_WILDBERRIES = "https://www.wildberries.ru/catalog/36734671/detail.aspx?targetUrl=SN";
-    public static final String PZV_OZON = "https://www.ozon.ru/product/parallelno-zadavaya-vopros-168137107/?sh=qwZ99MK_wQ";
-    public static final String PZV_ALIEXPRESS = "https://aliexpress.ru/item/1005002349414876.html?gatewayAdapt=glo2rus&sku_id=12000020229783418";
-    public static final String PZV_AMAZON = "https://www.amazon.com/dp/B084Q3G56J";
+    public static final String PZV_RIDERO = "ridero.ru/books/parallelno_zadavaya_vopros/";
+    public static final String PZV_LITRES = "litres.ru/daniil-apasov/parallelno-zadavaya-vopros-pod-pokrovom-edinstva-korrektirov/";
+    public static final String PZV_WILDBERRIES = "wildberries.ru/catalog/36734671/detail.aspx?targetUrl=SN";
+    public static final String PZV_OZON = "ozon.ru/product/parallelno-zadavaya-vopros-168137107/?sh=qwZ99MK_wQ";
+    public static final String PZV_ALIEXPRESS = "aliexpress.ru/item/1005002349414876.html?gatewayAdapt=glo2rus&sku_id=12000020229783418";
+    public static final String PZV_AMAZON = "amazon.com/dp/B084Q3G56J";
     public static final String POD_COVER = "AgACAgIAAxkBAAICIWKV6rrWZCfAVHeZRb600fEdhUUtAALFuTEbgvKxSGOQfTzAxJOgAQADAgADeQADJAQ";
     public static final String POD_NAME = "Под покровом единства";
     public static final String POD_DESC = "Никогда не задумывались, что друзья — это ваша слабость? Иногда вы" +
@@ -60,29 +53,20 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             "Самостоятельность во главе всего\\. Все ли смогут пройти такую школу жизни?";
     public static final String KORR_COVER = "AgACAgIAAxkBAAICHWKV6h4KSQAB0Cw-9YYzNmKqQYlBbAACwrkxG4LysUioRIR5O_3J4wEAAwIAA3kAAyQE";
     public static final String KORR_NAME = "Корректировка";
-    public static final String KORR_DESC = "Каждый из нас задумывается о такой штуке, как судьба\\. Что привело нас к" +
-            "сегодняшнему дню? Друзья, знакомые, парни и девушки\\. Все ли эти отношения образовались сами собой, или," +
-            "быть может, кто\\-то из твоих близких друзей всего лишь хорошо разыграл все карты несколько лет назад?";
+    public static final String KORR_DESC = "Каждый из нас задумывается о такой штуке, как судьба\\. Что привело нас к сегодняшнему дню? Друзья, знакомые, парни и девушки\\. Все ли эти отношения образовались сами собой, или, быть может, кто\\-то из твоих близких друзей всего лишь хорошо разыграл все карты несколько лет назад?";
     public static final String LUNN_COVER = "AgACAgIAAxkBAAICH2KV6lrfNbsYfnqVDQwV1uhexKUGAALDuTEbgvKxSBEP75XimlVwAQADAgADeQADJAQ";
     public static final String LUNN_NAME = "Лунные тени";
-    private static final String LUNN_DESC = "Общежитие при университете — особый период в жизни каждого человека\\." +
-            "Здесь происходит в основном много приятных событий, запоминающихся на всю жизнь\\. Однако судьбы трёх" +
-            "друзей это место однажды навсегда изменит\\. Им предстоит череда ночей, когда редко все оставались к " +
-            "утру живы\\. Что же делать в ситуации, когда врагом является твой спящий друг?";
+    private static final String LUNN_DESC = "Общежитие при университете — особый период в жизни каждого человека\\. Здесь происходит в основном много приятных событий, запоминающихся на всю жизнь\\. Однако судьбы трёх друзей это место однажды навсегда изменит\\. Им предстоит череда ночей, когда редко все оставались к утру живы\\. Что же делать в ситуации, когда врагом является твой спящий друг?";
     public static final String ZVEZDA_COVER = "AgACAgIAAxkBAAICG2KV6b_hGJ0jk_yHtzUWmfXrs0K-AALBuTEbgvKxSE55vwxxNxcxAQADAgADeQADJAQ";
     public static final String ZVEZDA_NAME = "Звезда";
-    private static final String ZVEZDA_DESC = "Детские мечты не всегда сбываются так, как вы того хотели\\. " +
-            "Кирили, обычный парень, которому предстоит испытать невероятные впечатления, когда он всё же сможет " +
-            "прикоснуться к своей мечте\\. Сможет ли он совладать с человеческими пороками и спасти Землю от уничтожения?";
+    private static final String ZVEZDA_DESC = "Детские мечты не всегда сбываются так, как вы того хотели\\. Кирили, обычный парень, которому предстоит испытать невероятные впечатления, когда он всё же сможет прикоснуться к своей мечте\\. Сможет ли он совладать с человеческими пороками и спасти Землю от уничтожения?";
     public static final String PON_COVER = "AgACAgIAAxkBAAICI2KV6u5ALDMcSPP4WPsvdr5iBJ1hAALGuTEbgvKxSGlGhmGbA1qtAQADAgADeQADJAQ";
     public static final String PON_NAME = "Понимания ноль";
-    private static final String PON_DESC = "Привет\\. Я тут рассказал неординарную историю нашего путешествия и " +
-            "немного о нашем мире\\. Представляете, у нас дружба между парнем и девушкой возможна\\. Причем на " +
-            "законодательном уровне\\. Мы начинаем обладать особыми силами, но это уже подробнее внутри\\. Возможно, " +
-            "ваша жизненная ситуация похожа на нашу, и вы являетесь таким другом противоположному себе полу, а?";
+    private static final String PON_DESC = "Привет\\. Я тут рассказал неординарную историю нашего путешествия и немного о нашем мире\\. Представляете, у нас дружба между парнем и девушкой возможна\\. Причем на законодательном уровне\\. Мы начинаем обладать особыми силами, но это уже подробнее внутри\\. Возможно, ваша жизненная ситуация похожа на нашу, и вы являетесь таким другом противоположному себе полу, а?";
     String BOOK_COVER;
     String BOOK_NAME;
     String BOOK_DESC;
+    Integer count = 1;
 
     @Override
     public String getBotUsername() {
@@ -106,14 +90,11 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 createMessage(message, "Добро пожаловать " + message.getFrom().getFirstName() + "\\!\n" +
                         "Мы можем перейти сразу к книгам или пообщаться\\. Я пока в процессе познания вашего мира," +
                         " поэтому пишите и если не пойму, то выдам вам подсказки\\.");
-                Document doc = collection.find(eq("_id", "PZV")).first();
-                assert doc != null;
-                System.out.println(doc.getString("name"));
             } else if (text.contains("привет")) {
                 createMessage(message, "Дороу");
             } else if (text.contains("книг") || text.contains("книж")) {
-                createMediaGroup(message);
-                createPhoto(update, message);
+                createFewCovers(message, collection);
+                createCover(update, message, collection);
             } else
                 createMessage(message, "Давайте вместе разберемся, чем я могу помочь");
         } else if (update.hasCallbackQuery()) {
@@ -121,6 +102,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             String backText = update.getCallbackQuery().getData();
             if (backText.equals("NextBook") || backText.equals("PreviousBook")) {
                 if (backText.equals("NextBook")) {
+                    if (count == 6) {
+                       count = 1;
+                    } else count++;
                     if (backMessage.getCaption().contains(PZV_NAME)) {
                         whichBook(POD_COVER, POD_NAME, POD_DESC);
                     } else if (backMessage.getCaption().contains(POD_NAME)) {
@@ -135,6 +119,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         whichBook(PZV_COVER, PZV_NAME, PZV_DESC);
                     }
                 } else {
+                    if (count == 1) {
+                        count = 6;
+                    } else count--;
                     if (backMessage.getCaption().contains(PZV_NAME)) {
                         whichBook(PON_COVER, PON_NAME, PON_DESC);
                     } else if (backMessage.getCaption().contains(POD_NAME)) {
@@ -286,33 +273,21 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         createMessage.setReplyMarkup(createKeyboard);
     }
 
-    private void createMediaGroup(Message message) {
+    private void createFewCovers(Message message, MongoCollection<Document> collection) {
+
         List<InputMedia> media = new ArrayList<>();
-        InputMedia photo1 = new InputMediaPhoto();
-        photo1.setParseMode(ParseMode.MARKDOWNV2);
-        photo1.setMedia(PZV_COVER);
-        photo1.setCaption("*" + PZV_NAME + "*\n" + PZV_DESC);
-        InputMedia photo2 = new InputMediaPhoto();
-        photo2.setParseMode(ParseMode.MARKDOWNV2);
-        photo2.setMedia(KORR_COVER);
-        photo2.setCaption("*" + KORR_NAME + "*\n" + KORR_DESC);
-        InputMedia photo3 = new InputMediaPhoto();
-        photo3.setParseMode(ParseMode.MARKDOWNV2);
-        photo3.setMedia(LUNN_COVER);
-        photo3.setCaption("*" + LUNN_NAME + "*\n" + LUNN_DESC);
-        InputMedia photo4 = new InputMediaPhoto();
-        photo4.setParseMode(ParseMode.MARKDOWNV2);
-        photo4.setMedia(ZVEZDA_COVER);
-        photo4.setCaption("*" + ZVEZDA_NAME + "*\n" + ZVEZDA_DESC);
-        InputMedia photo5 = new InputMediaPhoto();
-        photo5.setParseMode(ParseMode.MARKDOWNV2);
-        photo5.setMedia(PON_COVER);
-        photo5.setCaption("*" + PON_NAME + "*\n" + PON_DESC);
-        media.add(photo1);
-        media.add(photo2);
-        media.add(photo3);
-        media.add(photo4);
-        media.add(photo5);
+
+        Document document = new Document();
+        FindIterable<Document> documentCursor = collection.find(document);
+        for (Document doc: documentCursor) {
+            if (!doc.getString("_id").equals("PZV")) {
+            InputMedia photo = new InputMediaPhoto();
+            photo.setParseMode(ParseMode.MARKDOWNV2);
+            photo.setMedia(doc.getString("cover"));
+            photo.setCaption("*" + doc.getString("name") + "*\n" + doc.getString("description"));
+            media.add(photo);
+            }
+        }
         SendMediaGroup mediaGroup = new SendMediaGroup();
         mediaGroup.setChatId(message.getChatId().toString());
         mediaGroup.setMedias(media);
@@ -323,23 +298,26 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         }
     }
 
-    private void createPhoto(Update update, Message message) {
-        SendPhoto createPhoto = new SendPhoto();
-        createPhoto.setParseMode(ParseMode.MARKDOWNV2);
-        createPhoto.setChatId(message.getChatId().toString());
-        createPhoto.setPhoto(new InputFile(PZV_COVER));
-        createPhoto.setCaption("*" + PZV_NAME + "*\n" + PZV_DESC);
+    private void createCover(Update update, Message message, MongoCollection<Document> collection) {
+        SendPhoto photo = new SendPhoto();
+        photo.setParseMode(ParseMode.MARKDOWNV2);
+        photo.setChatId(message.getChatId().toString());
+        Document doc = collection.find(eq("_id", "PZV")).first();
+        assert doc != null;
+        photo.setPhoto(new InputFile(doc.getString("cover")));
+        photo.setCaption("*" + doc.getString("name") + "*\n" + doc.getString("description"));
         InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
         createFirstKeyboard(update, inlineKeyboard);
-        createPhoto.setReplyMarkup(inlineKeyboard);
+        photo.setReplyMarkup(inlineKeyboard);
         try {
-            execute(createPhoto);
+            execute(photo);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
     }
 
     public void createFirstKeyboard(Update update, InlineKeyboardMarkup inlineKeyboard) {
+        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
         InlineKeyboardButton ShopsBookButton = new InlineKeyboardButton();
         ShopsBookButton.setText("Книга в магазинах");
         ShopsBookButton.setCallbackData("ShopsBook");
@@ -351,19 +329,28 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         ExcerptBookButton.setCallbackData("ExcerptBook");
         List<InlineKeyboardButton> row1 = new ArrayList<>();
         row1.add(ShopsBookButton);
-        List<InlineKeyboardButton> row2 = new ArrayList<>();
+        rowList.add(row1);
+        List<InlineKeyboardButton> row2_3 = new ArrayList<>();
         if (update.getCallbackQuery() != null) {
+            List<InlineKeyboardButton> row2 = new ArrayList<>();
+            for (int i = 1; i <= 6; i++) {
+                InlineKeyboardButton book = new InlineKeyboardButton();
+                if (i == count) {
+                    book.setText("• " + i + " •");
+                } else book.setText(String.valueOf(i));
+                book.setCallbackData(String.valueOf(i));
+                row2.add(book);
+            }
+            rowList.add(row2);
             InlineKeyboardButton PreviousBookButton = new InlineKeyboardButton();
             PreviousBookButton.setText("Предыдущая книга");
             PreviousBookButton.setCallbackData("PreviousBook");
-            row2.add(PreviousBookButton);
+            row2_3.add(PreviousBookButton);
         }
-        row2.add(NextBookButton);
+        row2_3.add(NextBookButton);
         List<InlineKeyboardButton> row3 = new ArrayList<>();
         row3.add(ExcerptBookButton);
-        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
-        rowList.add(row1);
-        rowList.add(row2);
+        rowList.add(row2_3);
         rowList.add(row3);
         inlineKeyboard.setKeyboard(rowList);
     }

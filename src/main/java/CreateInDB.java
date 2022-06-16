@@ -5,7 +5,6 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.result.InsertOneResult;
 import org.bson.Document;
-import org.bson.types.ObjectId;
 
 public class CreateInDB {
     public static void main(String[] args) {
@@ -14,28 +13,17 @@ public class CreateInDB {
             MongoCollection<Document> collection = database.getCollection("MagistrmateCollection");
             try {
                 InsertOneResult result = collection.insertOne(new Document()
-                        .append("_id", "PZV")
-                        .append("name", "Параллельно задавая вопрос")
-                        .append("cover", "AgACAgIAAxkBAAIBx2KTdP4CNbqTZfv7Hm7TqGAugkdSAAKIvjEbUaqZSPwL-Up482owAQADAgADeQADJAQ")
-                        .append("description", """
-                                Сборник из пяти произведений\\. Подробные аннотации внутри\\.
-                                *Под покровом единства*
-                                Существует вуз, где запрещена дружба, и всех обучают рассчитывать только на себя\\.
-                                *Корректировка*
-                                В прошлом случайный спор друзей из компании повлиял на их судьбу в настоящем\\.
-                                *Лунные тени*
-                                Хождение во сне жителей общаги и кровавые истории под утро\\.
-                                *Звезда*
-                                Сказка о том, как на Землю упала Звезда\\.
-                                *Понимания ноль*
-                                Дружба между парнем и девушкой существует и поддерживается государством, давая им невероятные способности\\.""")
+                        .append("_id", "PON")
+                        .append("name", "Понимания ноль")
+                        .append("cover", "AgACAgIAAxkBAAICI2KV6u5ALDMcSPP4WPsvdr5iBJ1hAALGuTEbgvKxSGlGhmGbA1qtAQADAgADeQADJAQ")
+                        .append("description", "Привет\\. Я тут рассказал неординарную историю нашего путешествия и немного о нашем мире\\. Представляете, у нас дружба между парнем и девушкой возможна\\. Причем на законодательном уровне\\. Мы начинаем обладать особыми силами, но это уже подробнее внутри\\. Возможно, ваша жизненная ситуация похожа на нашу, и вы являетесь таким другом противоположному себе полу, а?")
                         .append("Shops", new Document()
-                                .append("ridero", "https://ridero.ru/books/parallelno_zadavaya_vopros/")
-                                .append("litres", "https://www.litres.ru/daniil-apasov/parallelno-zadavaya-vopros-pod-pokrovom-edinstva-korrektirov/")
-                                .append("wildberries", "https://www.wildberries.ru/catalog/36734671/detail.aspx?targetUrl=SN")
-                                .append("ozon", "https://www.ozon.ru/product/parallelno-zadavaya-vopros-168137107/?sh=qwZ99MK_wQ")
-                                .append("aliexpress","https://aliexpress.ru/item/1005002349414876.html?gatewayAdapt=glo2rus&sku_id=12000020229783418")
-                                .append("amazon","https://www.amazon.com/dp/B084Q3G56J")));
+                                .append("ridero", "ridero.ru/books/ponimaniya_nol/")
+                                .append("litres", "litres.ru/daniil-apasov/ponimaniya-nol-parallelno-zadavaya-vopros/")
+                                .append("wildberries", "wildberries.ru/catalog/36734665/detail.aspx")
+                                .append("ozon", "ozon.ru/context/detail/id/168137116/")
+                                .append("aliexpress", "aliexpress.com/item/1005002349453670.html")
+                                .append("amazon", "amazon.com/dp/B084Q88C9B")));
                 System.out.println("Success! Inserted document id: " + result.getInsertedId());
             } catch (MongoException me) {
                 System.err.println("Unable");
