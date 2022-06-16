@@ -20,7 +20,10 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -67,6 +70,8 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     String BOOK_NAME;
     String BOOK_DESC;
     Integer count = 1;
+    Integer countPrevious = 2;
+    String id;
 
     @Override
     public String getBotUsername() {
@@ -95,50 +100,37 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             } else if (text.contains("книг") || text.contains("книж")) {
                 createFewCovers(message, collection);
                 createCover(update, message, collection);
-            } else
+            } else {
                 createMessage(message, "Давайте вместе разберемся, чем я могу помочь");
+            }
         } else if (update.hasCallbackQuery()) {
             Message backMessage = update.getCallbackQuery().getMessage();
             String backText = update.getCallbackQuery().getData();
-            if (backText.equals("NextBook") || backText.equals("PreviousBook")) {
-                if (backText.equals("NextBook")) {
-                    if (count == 6) {
-                       count = 1;
-                    } else count++;
-                    if (backMessage.getCaption().contains(PZV_NAME)) {
-                        whichBook(POD_COVER, POD_NAME, POD_DESC);
-                    } else if (backMessage.getCaption().contains(POD_NAME)) {
-                        whichBook(KORR_COVER, KORR_NAME, KORR_DESC);
-                    } else if (backMessage.getCaption().contains(KORR_NAME)) {
-                        whichBook(LUNN_COVER, LUNN_NAME, LUNN_DESC);
-                    } else if (backMessage.getCaption().contains(LUNN_NAME)) {
-                        whichBook(ZVEZDA_COVER, ZVEZDA_NAME, ZVEZDA_DESC);
-                    } else if (backMessage.getCaption().contains(ZVEZDA_NAME)) {
-                        whichBook(PON_COVER, PON_NAME, PON_DESC);
-                    } else if (backMessage.getCaption().contains(PON_NAME)) {
-                        whichBook(PZV_COVER, PZV_NAME, PZV_DESC);
-                    }
+            if (backText.matches(".*\\d.*")) {
+                if (backText.contains("1")) {
+                    id = "PZV";
+                    count = 1;
+                } else if (backText.contains("2")) {
+                    id = "PPE";
+                    count = 2;
+                } else if (backText.contains("3")) {
+                    id = "KOR";
+                    count = 3;
+                } else if (backText.contains("4")) {
+                    id = "LUT";
+                    count = 4;
+                } else if (backText.contains("5")) {
+                    id = "ZVE";
+                    count = 5;
                 } else {
-                    if (count == 1) {
-                        count = 6;
-                    } else count--;
-                    if (backMessage.getCaption().contains(PZV_NAME)) {
-                        whichBook(PON_COVER, PON_NAME, PON_DESC);
-                    } else if (backMessage.getCaption().contains(POD_NAME)) {
-                        whichBook(PZV_COVER, PZV_NAME, PZV_DESC);
-                    } else if (backMessage.getCaption().contains(KORR_NAME)) {
-                        whichBook(POD_COVER, POD_NAME, POD_DESC);
-                    } else if (backMessage.getCaption().contains(LUNN_NAME)) {
-                        whichBook(KORR_COVER, KORR_NAME, KORR_DESC);
-                    } else if (backMessage.getCaption().contains(ZVEZDA_NAME)) {
-                        whichBook(LUNN_COVER, LUNN_NAME, LUNN_DESC);
-                    } else if (backMessage.getCaption().contains(PON_NAME)) {
-                        whichBook(ZVEZDA_COVER, ZVEZDA_NAME, ZVEZDA_DESC);
-                    }
+                    id = "PON";
+                    count = 6;
                 }
+                Document doc = collection.find(eq("_id", id)).first();
                 InputMedia photo = new InputMediaPhoto();
-                photo.setMedia(BOOK_COVER);
-                photo.setCaption("*" + BOOK_NAME + "*\n" + BOOK_DESC);
+                assert doc != null;
+                photo.setMedia(doc.getString("cover"));
+                photo.setCaption("*" + doc.getString("name") + "*\n" + doc.getString("description"));
                 photo.setParseMode(ParseMode.MARKDOWNV2);
                 EditMessageMedia replacePhoto = new EditMessageMedia();
                 replacePhoto.setMedia(photo);
@@ -158,7 +150,6 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 System.out.println("PDF");
                 System.out.println("Online");
                 System.out.println("Текст в картинках");
-
             } else if (update.getCallbackQuery().getData().equals("ShopsBook")) {
                 EditMessageReplyMarkup keyboard = new EditMessageReplyMarkup();
                 keyboard.setChatId(backMessage.getChatId().toString());
@@ -279,13 +270,13 @@ public class MagistrmateBot extends TelegramLongPollingBot {
 
         Document document = new Document();
         FindIterable<Document> documentCursor = collection.find(document);
-        for (Document doc: documentCursor) {
+        for (Document doc : documentCursor) {
             if (!doc.getString("_id").equals("PZV")) {
-            InputMedia photo = new InputMediaPhoto();
-            photo.setParseMode(ParseMode.MARKDOWNV2);
-            photo.setMedia(doc.getString("cover"));
-            photo.setCaption("*" + doc.getString("name") + "*\n" + doc.getString("description"));
-            media.add(photo);
+                InputMedia photo = new InputMediaPhoto();
+                photo.setParseMode(ParseMode.MARKDOWNV2);
+                photo.setMedia(doc.getString("cover"));
+                photo.setCaption("*" + doc.getString("name") + "*\n" + doc.getString("description"));
+                media.add(photo);
             }
         }
         SendMediaGroup mediaGroup = new SendMediaGroup();
@@ -323,8 +314,8 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         ShopsBookButton.setCallbackData("ShopsBook");
         InlineKeyboardButton NextBookButton = new InlineKeyboardButton();
         NextBookButton.setText("Следующая книга");
-        NextBookButton.setCallbackData("NextBook");
         InlineKeyboardButton ExcerptBookButton = new InlineKeyboardButton();
+        NextBookButton.setCallbackData("NextBook2");
         ExcerptBookButton.setText("Отрывок из книги");
         ExcerptBookButton.setCallbackData("ExcerptBook");
         List<InlineKeyboardButton> row1 = new ArrayList<>();
@@ -335,16 +326,25 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             List<InlineKeyboardButton> row2 = new ArrayList<>();
             for (int i = 1; i <= 6; i++) {
                 InlineKeyboardButton book = new InlineKeyboardButton();
-                if (i == count) {
-                    book.setText("• " + i + " •");
-                } else book.setText(String.valueOf(i));
+                if (i == count) book.setText("• " + i + " •");
+                else book.setText(String.valueOf(i));
                 book.setCallbackData(String.valueOf(i));
                 row2.add(book);
             }
             rowList.add(row2);
+            if (count == 6) {
+                count = 1;
+                countPrevious = 5;
+            }
+            else {
+                ++count;
+                countPrevious = count - 1;
+            }
+            if (count != 1) --countPrevious;
+            NextBookButton.setCallbackData("NextBook" + count);
             InlineKeyboardButton PreviousBookButton = new InlineKeyboardButton();
             PreviousBookButton.setText("Предыдущая книга");
-            PreviousBookButton.setCallbackData("PreviousBook");
+            PreviousBookButton.setCallbackData("PreviousBook" + countPrevious);
             row2_3.add(PreviousBookButton);
         }
         row2_3.add(NextBookButton);
@@ -364,3 +364,36 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     }
 
 }
+            /*hgy if (backText.equals("NextBook")) {
+                if (count == 6) count = 1;
+                    else count++;
+                if (backMessage.getCaption().contains(PZV_NAME)) {
+                    whichBook(POD_COVER, POD_NAME, POD_DESC);
+                } else if (backMessage.getCaption().contains(POD_NAME)) {
+                    whichBook(KORR_COVER, KORR_NAME, KORR_DESC);
+                } else if (backMessage.getCaption().contains(KORR_NAME)) {
+                    whichBook(LUNN_COVER, LUNN_NAME, LUNN_DESC);
+                } else if (backMessage.getCaption().contains(LUNN_NAME)) {
+                    whichBook(ZVEZDA_COVER, ZVEZDA_NAME, ZVEZDA_DESC);
+                } else if (backMessage.getCaption().contains(ZVEZDA_NAME)) {
+                    whichBook(PON_COVER, PON_NAME, PON_DESC);
+                } else if (backMessage.getCaption().contains(PON_NAME)) {
+                    whichBook(PZV_COVER, PZV_NAME, PZV_DESC);
+                }
+            } else {
+                if (count == 1) count = 6;
+                    else count--;
+                if (backMessage.getCaption().contains(PZV_NAME)) {
+                    whichBook(PON_COVER, PON_NAME, PON_DESC);
+                } else if (backMessage.getCaption().contains(POD_NAME)) {
+                    whichBook(PZV_COVER, PZV_NAME, PZV_DESC);
+                } else if (backMessage.getCaption().contains(KORR_NAME)) {
+                    whichBook(POD_COVER, POD_NAME, POD_DESC);
+                } else if (backMessage.getCaption().contains(LUNN_NAME)) {
+                    whichBook(KORR_COVER, KORR_NAME, KORR_DESC);
+                } else if (backMessage.getCaption().contains(ZVEZDA_NAME)) {
+                    whichBook(LUNN_COVER, LUNN_NAME, LUNN_DESC);
+                } else if (backMessage.getCaption().contains(PON_NAME)) {
+                    whichBook(ZVEZDA_COVER, ZVEZDA_NAME, ZVEZDA_DESC);
+                }
+            }*/
