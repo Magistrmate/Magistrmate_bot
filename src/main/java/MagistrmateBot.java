@@ -20,55 +20,18 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.text;
 
 public class MagistrmateBot extends TelegramLongPollingBot {
-    public static final String PZV_COVER = "AgACAgIAAxkBAAIBx2KTdP4CNbqTZfv7Hm7TqGAugkdSAAKIvjEbUaqZSPwL-Up482owAQADAgADeQADJAQ";
-    public static final String PZV_NAME = "Параллельно задавая вопрос";
-    public static final String PZV_DESC = """
-            Сборник из пяти произведений\\. Подробные аннотации внутри\\.
-            *Под покровом единства*
-            Существует вуз, где запрещена дружба, и всех обучают рассчитывать только на себя\\.
-            *Корректировка*
-            В прошлом случайный спор друзей из компании повлиял на их судьбу в настоящем\\.
-            *Лунные тени*
-            Хождение во сне жителей общаги и кровавые истории под утро\\.
-            *Звезда*
-            Сказка о том, как на Землю упала Звезда\\.
-            *Понимания ноль*
-            Дружба между парнем и девушкой существует и поддерживается государством, давая им невероятные способности\\.""";
     public static final String PZV_RIDERO = "ridero.ru/books/parallelno_zadavaya_vopros/";
     public static final String PZV_LITRES = "litres.ru/daniil-apasov/parallelno-zadavaya-vopros-pod-pokrovom-edinstva-korrektirov/";
     public static final String PZV_WILDBERRIES = "wildberries.ru/catalog/36734671/detail.aspx?targetUrl=SN";
     public static final String PZV_OZON = "ozon.ru/product/parallelno-zadavaya-vopros-168137107/?sh=qwZ99MK_wQ";
     public static final String PZV_ALIEXPRESS = "aliexpress.ru/item/1005002349414876.html?gatewayAdapt=glo2rus&sku_id=12000020229783418";
     public static final String PZV_AMAZON = "amazon.com/dp/B084Q3G56J";
-    public static final String POD_COVER = "AgACAgIAAxkBAAICIWKV6rrWZCfAVHeZRb600fEdhUUtAALFuTEbgvKxSGOQfTzAxJOgAQADAgADeQADJAQ";
-    public static final String POD_NAME = "Под покровом единства";
-    public static final String POD_DESC = "Никогда не задумывались, что друзья — это ваша слабость? Иногда вы" +
-            "рискуете всем ради них\\. Государство и учебные заведения об этом не расскажут, кроме одного вуза со" +
-            "спецпрограммой, который сделает из каждого студента личность\\. Где все связи будут запрещены\\." +
-            "Самостоятельность во главе всего\\. Все ли смогут пройти такую школу жизни?";
-    public static final String KORR_COVER = "AgACAgIAAxkBAAICHWKV6h4KSQAB0Cw-9YYzNmKqQYlBbAACwrkxG4LysUioRIR5O_3J4wEAAwIAA3kAAyQE";
-    public static final String KORR_NAME = "Корректировка";
-    public static final String KORR_DESC = "Каждый из нас задумывается о такой штуке, как судьба\\. Что привело нас к сегодняшнему дню? Друзья, знакомые, парни и девушки\\. Все ли эти отношения образовались сами собой, или, быть может, кто\\-то из твоих близких друзей всего лишь хорошо разыграл все карты несколько лет назад?";
-    public static final String LUNN_COVER = "AgACAgIAAxkBAAICH2KV6lrfNbsYfnqVDQwV1uhexKUGAALDuTEbgvKxSBEP75XimlVwAQADAgADeQADJAQ";
-    public static final String LUNN_NAME = "Лунные тени";
-    private static final String LUNN_DESC = "Общежитие при университете — особый период в жизни каждого человека\\. Здесь происходит в основном много приятных событий, запоминающихся на всю жизнь\\. Однако судьбы трёх друзей это место однажды навсегда изменит\\. Им предстоит череда ночей, когда редко все оставались к утру живы\\. Что же делать в ситуации, когда врагом является твой спящий друг?";
-    public static final String ZVEZDA_COVER = "AgACAgIAAxkBAAICG2KV6b_hGJ0jk_yHtzUWmfXrs0K-AALBuTEbgvKxSE55vwxxNxcxAQADAgADeQADJAQ";
-    public static final String ZVEZDA_NAME = "Звезда";
-    private static final String ZVEZDA_DESC = "Детские мечты не всегда сбываются так, как вы того хотели\\. Кирили, обычный парень, которому предстоит испытать невероятные впечатления, когда он всё же сможет прикоснуться к своей мечте\\. Сможет ли он совладать с человеческими пороками и спасти Землю от уничтожения?";
-    public static final String PON_COVER = "AgACAgIAAxkBAAICI2KV6u5ALDMcSPP4WPsvdr5iBJ1hAALGuTEbgvKxSGlGhmGbA1qtAQADAgADeQADJAQ";
-    public static final String PON_NAME = "Понимания ноль";
-    private static final String PON_DESC = "Привет\\. Я тут рассказал неординарную историю нашего путешествия и немного о нашем мире\\. Представляете, у нас дружба между парнем и девушкой возможна\\. Причем на законодательном уровне\\. Мы начинаем обладать особыми силами, но это уже подробнее внутри\\. Возможно, ваша жизненная ситуация похожа на нашу, и вы являетесь таким другом противоположному себе полу, а?";
-    String BOOK_COVER;
-    String BOOK_NAME;
-    String BOOK_DESC;
     Integer count = 1;
     Integer countPrevious = 2;
     String id;
@@ -215,12 +178,6 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         }
     }
 
-    public void whichBook(String cover, String name, String describe) {
-        BOOK_COVER = cover;
-        BOOK_NAME = name;
-        BOOK_DESC = describe;
-    }
-
     private void createMessage(Message message, String text) {
         String user_first_name = message.getChat().getFirstName();
         String user_last_name = message.getChat().getLastName();
@@ -335,8 +292,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             if (count == 6) {
                 count = 1;
                 countPrevious = 5;
-            }
-            else {
+            } else {
                 ++count;
                 countPrevious = count - 1;
             }
@@ -364,36 +320,3 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     }
 
 }
-            /*hgy if (backText.equals("NextBook")) {
-                if (count == 6) count = 1;
-                    else count++;
-                if (backMessage.getCaption().contains(PZV_NAME)) {
-                    whichBook(POD_COVER, POD_NAME, POD_DESC);
-                } else if (backMessage.getCaption().contains(POD_NAME)) {
-                    whichBook(KORR_COVER, KORR_NAME, KORR_DESC);
-                } else if (backMessage.getCaption().contains(KORR_NAME)) {
-                    whichBook(LUNN_COVER, LUNN_NAME, LUNN_DESC);
-                } else if (backMessage.getCaption().contains(LUNN_NAME)) {
-                    whichBook(ZVEZDA_COVER, ZVEZDA_NAME, ZVEZDA_DESC);
-                } else if (backMessage.getCaption().contains(ZVEZDA_NAME)) {
-                    whichBook(PON_COVER, PON_NAME, PON_DESC);
-                } else if (backMessage.getCaption().contains(PON_NAME)) {
-                    whichBook(PZV_COVER, PZV_NAME, PZV_DESC);
-                }
-            } else {
-                if (count == 1) count = 6;
-                    else count--;
-                if (backMessage.getCaption().contains(PZV_NAME)) {
-                    whichBook(PON_COVER, PON_NAME, PON_DESC);
-                } else if (backMessage.getCaption().contains(POD_NAME)) {
-                    whichBook(PZV_COVER, PZV_NAME, PZV_DESC);
-                } else if (backMessage.getCaption().contains(KORR_NAME)) {
-                    whichBook(POD_COVER, POD_NAME, POD_DESC);
-                } else if (backMessage.getCaption().contains(LUNN_NAME)) {
-                    whichBook(KORR_COVER, KORR_NAME, KORR_DESC);
-                } else if (backMessage.getCaption().contains(ZVEZDA_NAME)) {
-                    whichBook(LUNN_COVER, LUNN_NAME, LUNN_DESC);
-                } else if (backMessage.getCaption().contains(PON_NAME)) {
-                    whichBook(ZVEZDA_COVER, ZVEZDA_NAME, ZVEZDA_DESC);
-                }
-            }*/
