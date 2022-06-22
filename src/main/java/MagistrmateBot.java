@@ -35,12 +35,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     public static final String PZV_OZON = "ozon.ru/product/parallelno-zadavaya-vopros-168137107/?sh=qwZ99MK_wQ";
     public static final String PZV_ALIEXPRESS = "aliexpress.ru/item/1005002349414876.html?gatewayAdapt=glo2rus&sku_id=12000020229783418";
     public static final String PZV_AMAZON = "amazon.com/dp/B084Q3G56J";
-    Integer Book = 1;
-    Integer PreviousBook = 2;
     Integer nextBook = 0;
-    Integer i = 1;
-    String id;
-    boolean next = false;
 
     @Override
     public String getBotUsername() {
@@ -75,10 +70,12 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         } else if (update.hasCallbackQuery()) {
             Message backMessage = update.getCallbackQuery().getMessage();
             String backText = update.getCallbackQuery().getData();
-            if (backText.equals("NextBook") || backText.equals("PreviousBook")) {
+            if (backText.equals("NextBook") || backText.equals("PreviousBook") || backText.matches(".*\\d+.*")) {
                 if (backText.equals("PreviousBook")) {
                     if (nextBook == 1) nextBook = 5;
                     else nextBook = nextBook - 2;
+                } else if (backText.matches(".*\\d+.*")) {
+                    nextBook = Integer.parseInt(backText) - 1;
                 }
                 if (nextBook == collection.countDocuments()) nextBook = 0;
                 Document book = collection.find().skip(nextBook).first();
@@ -99,8 +96,6 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }
-            } else if (update.getCallbackQuery().getData().equals("12345")) {
-
             } else if (update.getCallbackQuery().getData().equals("ExcerptBook")) {
                 System.out.println("EPUB");
                 System.out.println("FB2");
