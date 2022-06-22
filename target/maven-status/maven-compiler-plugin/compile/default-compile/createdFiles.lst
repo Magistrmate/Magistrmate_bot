@@ -1,3 +1,6 @@
+MongoDB.class
 Main.class
 MagistrmateBot.class
+CreateInDB.class
 BotConfig.class
+Read.class

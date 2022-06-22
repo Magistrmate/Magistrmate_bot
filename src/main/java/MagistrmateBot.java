@@ -1,4 +1,7 @@
-import com.mongodb.client.*;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
@@ -20,10 +23,10 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
-
-import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Filters.text;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 public class MagistrmateBot extends TelegramLongPollingBot {
     public static final String PZV_RIDERO = "ridero.ru/books/parallelno_zadavaya_vopros/";
@@ -32,9 +35,12 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     public static final String PZV_OZON = "ozon.ru/product/parallelno-zadavaya-vopros-168137107/?sh=qwZ99MK_wQ";
     public static final String PZV_ALIEXPRESS = "aliexpress.ru/item/1005002349414876.html?gatewayAdapt=glo2rus&sku_id=12000020229783418";
     public static final String PZV_AMAZON = "amazon.com/dp/B084Q3G56J";
-    Integer count = 1;
-    Integer countPrevious = 2;
+    Integer Book = 1;
+    Integer PreviousBook = 2;
+    Integer nextBook = 0;
+    Integer i = 1;
     String id;
+    boolean next = false;
 
     @Override
     public String getBotUsername() {
@@ -62,51 +68,39 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 createMessage(message, "Дороу");
             } else if (text.contains("книг") || text.contains("книж")) {
                 createFewCovers(message, collection);
-                createCover(update, message, collection);
+                createCover(update, message, database, collection);
             } else {
                 createMessage(message, "Давайте вместе разберемся, чем я могу помочь");
             }
         } else if (update.hasCallbackQuery()) {
             Message backMessage = update.getCallbackQuery().getMessage();
             String backText = update.getCallbackQuery().getData();
-            if (backText.matches(".*\\d.*")) {
-                if (backText.contains("1")) {
-                    id = "PZV";
-                    count = 1;
-                } else if (backText.contains("2")) {
-                    id = "PPE";
-                    count = 2;
-                } else if (backText.contains("3")) {
-                    id = "KOR";
-                    count = 3;
-                } else if (backText.contains("4")) {
-                    id = "LUT";
-                    count = 4;
-                } else if (backText.contains("5")) {
-                    id = "ZVE";
-                    count = 5;
-                } else {
-                    id = "PON";
-                    count = 6;
+            if (backText.equals("NextBook") || backText.equals("PreviousBook")) {
+                if (backText.equals("PreviousBook")) {
+                    if (nextBook == 1) nextBook = 5;
+                    else nextBook = nextBook - 2;
                 }
-                Document doc = collection.find(eq("_id", id)).first();
+                if (nextBook == collection.countDocuments()) nextBook = 0;
+                Document book = collection.find().skip(nextBook).first();
                 InputMedia photo = new InputMediaPhoto();
-                assert doc != null;
-                photo.setMedia(doc.getString("cover"));
-                photo.setCaption("*" + doc.getString("name") + "*\n" + doc.getString("description"));
+                assert book != null;
+                photo.setMedia(book.getString("cover"));
+                photo.setCaption("*" + book.getString("name") + "*\n" + book.getString("description"));
                 photo.setParseMode(ParseMode.MARKDOWNV2);
                 EditMessageMedia replacePhoto = new EditMessageMedia();
                 replacePhoto.setMedia(photo);
                 replacePhoto.setChatId(backMessage.getChatId().toString());
                 replacePhoto.setMessageId(Integer.valueOf(backMessage.getMessageId().toString()));
                 InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
-                createFirstKeyboard(update, inlineKeyboard);
+                createFirstKeyboard(update, inlineKeyboard, database);
                 replacePhoto.setReplyMarkup(inlineKeyboard);
                 try {
                     execute(replacePhoto);
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }
+            } else if (update.getCallbackQuery().getData().equals("12345")) {
+
             } else if (update.getCallbackQuery().getData().equals("ExcerptBook")) {
                 System.out.println("EPUB");
                 System.out.println("FB2");
@@ -167,7 +161,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 backKeyboard.setChatId(backMessage.getChatId().toString());
                 backKeyboard.setMessageId(Integer.valueOf(backMessage.getMessageId().toString()));
                 InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
-                createFirstKeyboard(update, inlineKeyboard);
+                createFirstKeyboard(update, inlineKeyboard, database);
                 backKeyboard.setReplyMarkup(inlineKeyboard);
                 try {
                     execute(backKeyboard);
@@ -225,16 +219,13 @@ public class MagistrmateBot extends TelegramLongPollingBot {
 
         List<InputMedia> media = new ArrayList<>();
 
-        Document document = new Document();
-        FindIterable<Document> documentCursor = collection.find(document);
-        for (Document doc : documentCursor) {
-            if (!doc.getString("_id").equals("PZV")) {
-                InputMedia photo = new InputMediaPhoto();
-                photo.setParseMode(ParseMode.MARKDOWNV2);
-                photo.setMedia(doc.getString("cover"));
-                photo.setCaption("*" + doc.getString("name") + "*\n" + doc.getString("description"));
-                media.add(photo);
-            }
+        List<Document> books = collection.find().skip(1).into(new ArrayList<>());
+        for (Document book : books) {
+            InputMedia photo = new InputMediaPhoto();
+            photo.setParseMode(ParseMode.MARKDOWNV2);
+            photo.setMedia(book.getString("cover"));
+            photo.setCaption("*" + book.getString("name") + "*\n" + book.getString("description"));
+            media.add(photo);
         }
         SendMediaGroup mediaGroup = new SendMediaGroup();
         mediaGroup.setChatId(message.getChatId().toString());
@@ -246,16 +237,16 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         }
     }
 
-    private void createCover(Update update, Message message, MongoCollection<Document> collection) {
+    private void createCover(Update update, Message message, MongoDatabase database, MongoCollection<Document> collection) {
         SendPhoto photo = new SendPhoto();
         photo.setParseMode(ParseMode.MARKDOWNV2);
         photo.setChatId(message.getChatId().toString());
-        Document doc = collection.find(eq("_id", "PZV")).first();
+        Document doc = collection.find().limit(1).first();
         assert doc != null;
         photo.setPhoto(new InputFile(doc.getString("cover")));
         photo.setCaption("*" + doc.getString("name") + "*\n" + doc.getString("description"));
         InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
-        createFirstKeyboard(update, inlineKeyboard);
+        createFirstKeyboard(update, inlineKeyboard, database);
         photo.setReplyMarkup(inlineKeyboard);
         try {
             execute(photo);
@@ -264,7 +255,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         }
     }
 
-    public void createFirstKeyboard(Update update, InlineKeyboardMarkup inlineKeyboard) {
+    public void createFirstKeyboard(Update update, InlineKeyboardMarkup inlineKeyboard, MongoDatabase database) {
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
         InlineKeyboardButton ShopsBookButton = new InlineKeyboardButton();
         ShopsBookButton.setText("Книга в магазинах");
@@ -272,35 +263,28 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         InlineKeyboardButton NextBookButton = new InlineKeyboardButton();
         NextBookButton.setText("Следующая книга");
         InlineKeyboardButton ExcerptBookButton = new InlineKeyboardButton();
-        NextBookButton.setCallbackData("NextBook2");
+        NextBookButton.setCallbackData("NextBook");
         ExcerptBookButton.setText("Отрывок из книги");
         ExcerptBookButton.setCallbackData("ExcerptBook");
         List<InlineKeyboardButton> row1 = new ArrayList<>();
         row1.add(ShopsBookButton);
         rowList.add(row1);
         List<InlineKeyboardButton> row2_3 = new ArrayList<>();
+        nextBook++;
         if (update.getCallbackQuery() != null) {
             List<InlineKeyboardButton> row2 = new ArrayList<>();
-            for (int i = 1; i <= 6; i++) {
-                InlineKeyboardButton book = new InlineKeyboardButton();
-                if (i == count) book.setText("• " + i + " •");
-                else book.setText(String.valueOf(i));
-                book.setCallbackData(String.valueOf(i));
-                row2.add(book);
+            MongoCollection<Document> collection = database.getCollection("MagistrmateCollection");
+            for (int i = 1; i <= collection.countDocuments(); i++) {
+                InlineKeyboardButton bookButton = new InlineKeyboardButton();
+                if (nextBook == i) bookButton.setText("• " + i + " •");
+                else bookButton.setText(String.valueOf(i));
+                bookButton.setCallbackData(String.valueOf(i));
+                row2.add(bookButton);
             }
             rowList.add(row2);
-            if (count == 6) {
-                count = 1;
-                countPrevious = 5;
-            } else {
-                ++count;
-                countPrevious = count - 1;
-            }
-            if (count != 1) --countPrevious;
-            NextBookButton.setCallbackData("NextBook" + count);
             InlineKeyboardButton PreviousBookButton = new InlineKeyboardButton();
             PreviousBookButton.setText("Предыдущая книга");
-            PreviousBookButton.setCallbackData("PreviousBook" + countPrevious);
+            PreviousBookButton.setCallbackData("PreviousBook");
             row2_3.add(PreviousBookButton);
         }
         row2_3.add(NextBookButton);

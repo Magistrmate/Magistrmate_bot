@@ -2,18 +2,18 @@
 <metadata modelVersion="1.1.0">
   <groupId>org.example</groupId>
   <artifactId>magistrmate</artifactId>
+  <version>1.0-SNAPSHOT</version>
   <versioning>
-    <lastUpdated>20220616123118</lastUpdated>
     <snapshot>
       <localCopy>true</localCopy>
     </snapshot>
+    <lastUpdated>20220621104849</lastUpdated>
     <snapshotVersions>
       <snapshotVersion>
         <extension>jar</extension>
         <value>1.0-SNAPSHOT</value>
-        <updated>20220616123118</updated>
+        <updated>20220621104849</updated>
       </snapshotVersion>
     </snapshotVersions>
   </versioning>
-  <version>1.0-SNAPSHOT</version>
 </metadata>
