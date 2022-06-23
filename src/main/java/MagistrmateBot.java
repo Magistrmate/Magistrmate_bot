@@ -23,19 +23,11 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 public class MagistrmateBot extends TelegramLongPollingBot {
-    public static final String PZV_RIDERO = "ridero.ru/books/parallelno_zadavaya_vopros/";
-    public static final String PZV_LITRES = "litres.ru/daniil-apasov/parallelno-zadavaya-vopros-pod-pokrovom-edinstva-korrektirov/";
-    public static final String PZV_WILDBERRIES = "wildberries.ru/catalog/36734671/detail.aspx?targetUrl=SN";
-    public static final String PZV_OZON = "ozon.ru/product/parallelno-zadavaya-vopros-168137107/?sh=qwZ99MK_wQ";
-    public static final String PZV_ALIEXPRESS = "aliexpress.ru/item/1005002349414876.html?gatewayAdapt=glo2rus&sku_id=12000020229783418";
-    public static final String PZV_AMAZON = "amazon.com/dp/B084Q3G56J";
     Integer nextBook = 0;
+    Integer showBook;
 
     @Override
     public String getBotUsername() {
@@ -109,22 +101,25 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
                 InlineKeyboardButton RideroButton = new InlineKeyboardButton();
                 RideroButton.setText("Ridero");
-                RideroButton.setUrl(PZV_RIDERO);
+                showBook = nextBook - 1;
+                Document book = collection.find().skip(showBook).first();
+                assert book != null;
+                RideroButton.setUrl(book.getEmbedded(Arrays.asList("Shops", "ridero"), String.class));
                 InlineKeyboardButton LitResButton = new InlineKeyboardButton();
                 LitResButton.setText("ЛитРес");
-                LitResButton.setUrl(PZV_LITRES);
+                LitResButton.setUrl(book.getEmbedded(Arrays.asList("Shops", "litres"), String.class));
                 InlineKeyboardButton WildberriesButton = new InlineKeyboardButton();
                 WildberriesButton.setText("Wildberries");
-                WildberriesButton.setUrl(PZV_WILDBERRIES);
+                WildberriesButton.setUrl(book.getEmbedded(Arrays.asList("Shops", "wildberries"), String.class));
                 InlineKeyboardButton OzonButton = new InlineKeyboardButton();
                 OzonButton.setText("Ozon");
-                OzonButton.setUrl(PZV_OZON);
+                OzonButton.setUrl(book.getEmbedded(Arrays.asList("Shops", "ozon"), String.class));
                 InlineKeyboardButton AliExpressButton = new InlineKeyboardButton();
                 AliExpressButton.setText("AliExpress");
-                AliExpressButton.setUrl(PZV_ALIEXPRESS);
+                AliExpressButton.setUrl(book.getEmbedded(Arrays.asList("Shops", "aliexpress"), String.class));
                 InlineKeyboardButton AmazonButton = new InlineKeyboardButton();
                 AmazonButton.setText("Amazon");
-                AmazonButton.setUrl(PZV_AMAZON);
+                AmazonButton.setUrl(book.getEmbedded(Arrays.asList("Shops", "amazon"), String.class));
                 InlineKeyboardButton inlineKeyboardButton7 = new InlineKeyboardButton();
                 inlineKeyboardButton7.setText("Вернуться");
                 inlineKeyboardButton7.setCallbackData("BackShopsBook");
