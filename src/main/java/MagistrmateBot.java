@@ -95,46 +95,46 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 System.out.println("Online");
                 System.out.println("Текст в картинках");
             } else if (update.getCallbackQuery().getData().equals("ShopsBook")) {
+                showBook = nextBook - 1;
+                Document book = collection.find().skip(showBook).first();
+                assert book != null;
                 EditMessageReplyMarkup keyboard = new EditMessageReplyMarkup();
                 keyboard.setChatId(backMessage.getChatId().toString());
                 keyboard.setMessageId(Integer.valueOf(backMessage.getMessageId().toString()));
                 InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+                List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
+                List<InlineKeyboardButton> row1 = new ArrayList<>();
+                List<InlineKeyboardButton> row2 = new ArrayList<>();
+                List<InlineKeyboardButton> row3 = new ArrayList<>();
+                List<InlineKeyboardButton> row4 = new ArrayList<>();
                 InlineKeyboardButton RideroButton = new InlineKeyboardButton();
-                RideroButton.setText("Ridero");
-                showBook = nextBook - 1;
-                Document book = collection.find().skip(showBook).first();
-                assert book != null;
-                RideroButton.setUrl(book.getEmbedded(Arrays.asList("Shops", "ridero"), String.class));
                 InlineKeyboardButton LitResButton = new InlineKeyboardButton();
+                InlineKeyboardButton WildberriesButton = new InlineKeyboardButton();
+                InlineKeyboardButton OzonButton = new InlineKeyboardButton();
+                InlineKeyboardButton AliExpressButton = new InlineKeyboardButton();
+                InlineKeyboardButton AmazonButton = new InlineKeyboardButton();
+                InlineKeyboardButton returnButton = new InlineKeyboardButton();
+                RideroButton.setText("Ridero");
+                RideroButton.setUrl(book.getEmbedded(Arrays.asList("Shops", "ridero"), String.class));
                 LitResButton.setText("ЛитРес");
                 LitResButton.setUrl(book.getEmbedded(Arrays.asList("Shops", "litres"), String.class));
-                InlineKeyboardButton WildberriesButton = new InlineKeyboardButton();
                 WildberriesButton.setText("Wildberries");
                 WildberriesButton.setUrl(book.getEmbedded(Arrays.asList("Shops", "wildberries"), String.class));
-                InlineKeyboardButton OzonButton = new InlineKeyboardButton();
                 OzonButton.setText("Ozon");
                 OzonButton.setUrl(book.getEmbedded(Arrays.asList("Shops", "ozon"), String.class));
-                InlineKeyboardButton AliExpressButton = new InlineKeyboardButton();
                 AliExpressButton.setText("AliExpress");
                 AliExpressButton.setUrl(book.getEmbedded(Arrays.asList("Shops", "aliexpress"), String.class));
-                InlineKeyboardButton AmazonButton = new InlineKeyboardButton();
                 AmazonButton.setText("Amazon");
                 AmazonButton.setUrl(book.getEmbedded(Arrays.asList("Shops", "amazon"), String.class));
-                InlineKeyboardButton inlineKeyboardButton7 = new InlineKeyboardButton();
-                inlineKeyboardButton7.setText("Вернуться");
-                inlineKeyboardButton7.setCallbackData("BackShopsBook");
-                List<InlineKeyboardButton> row1 = new ArrayList<>();
+                returnButton.setText("Вернуться");
+                returnButton.setCallbackData("BackShopsBook");
                 row1.add(RideroButton);
-                List<InlineKeyboardButton> row2 = new ArrayList<>();
                 row2.add(LitResButton);
                 row2.add(WildberriesButton);
                 row2.add(OzonButton);
-                List<InlineKeyboardButton> row3 = new ArrayList<>();
                 row3.add(AliExpressButton);
                 row3.add(AmazonButton);
-                List<InlineKeyboardButton> row4 = new ArrayList<>();
-                row4.add(inlineKeyboardButton7);
-                List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
+                row4.add(returnButton);
                 rowList.add(row1);
                 rowList.add(row2);
                 rowList.add(row3);
@@ -146,7 +146,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }
-            } else if (update.getCallbackQuery().getData().equals("BackShopsBook")) {
+            } else if (backText.equals("BackShopsBook")) {
                 EditMessageReplyMarkup backKeyboard = new EditMessageReplyMarkup();
                 backKeyboard.setChatId(backMessage.getChatId().toString());
                 backKeyboard.setMessageId(Integer.valueOf(backMessage.getMessageId().toString()));
