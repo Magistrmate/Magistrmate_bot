@@ -97,16 +97,19 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 EditMessageReplyMarkup keyboard = new EditMessageReplyMarkup();
                 keyboard.setChatId(backMessage.getChatId().toString());
                 keyboard.setMessageId(Integer.valueOf(backMessage.getMessageId().toString()));
-/*er                InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+                InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
                 List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
                 List<InlineKeyboardButton> row1 = new ArrayList<>();
                 List<InlineKeyboardButton> row2 = new ArrayList<>();
                 List<InlineKeyboardButton> row3 = new ArrayList<>();
-                InlineKeyboardButton RidButton = new InlineKeyboardButton();
-                InlineKeyboardButton LitButton = new InlineKeyboardButton();
-                InlineKeyboardButton WildButton = new InlineKeyboardButton();
-                InlineKeyboardButton OzonButton = new InlineKeyboardButton();
-                InlineKeyboardButton AliButton = new InlineKeyboardButton();*/
+                InlineKeyboardButton button1 = new InlineKeyboardButton();
+                InlineKeyboardButton button2 = new InlineKeyboardButton();
+                InlineKeyboardButton button3 = new InlineKeyboardButton();
+                InlineKeyboardButton button4 = new InlineKeyboardButton();
+                InlineKeyboardButton button5 = new InlineKeyboardButton();
+                button1.setText("Online");
+                button1.setCallbackData("Online");
+                button1.setUrl("https://telegra.ph/Parallelno-zadavaya-vopros-06-28");
             } else if (update.getCallbackQuery().getData().equals("ShopsBook")) {
                 showBook = nextBook - 1;
                 Document book = collection.find().skip(showBook).first();
@@ -120,52 +123,21 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 List<InlineKeyboardButton> row2 = new ArrayList<>();
                 List<InlineKeyboardButton> row3 = new ArrayList<>();
                 List<InlineKeyboardButton> row4 = new ArrayList<>();
-                //InlineKeyboardButton RidButton = new InlineKeyboardButton();
                 InlineKeyboardButton button1 = new InlineKeyboardButton();
                 InlineKeyboardButton button2 = new InlineKeyboardButton();
                 InlineKeyboardButton button3 = new InlineKeyboardButton();
                 InlineKeyboardButton button4 = new InlineKeyboardButton();
                 InlineKeyboardButton button5 = new InlineKeyboardButton();
                 InlineKeyboardButton button6 = new InlineKeyboardButton();
-                //InlineKeyboardButton LitButton = new InlineKeyboardButton();
-                //InlineKeyboardButton WildButton = new InlineKeyboardButton();
-                //InlineKeyboardButton OzonButton = new InlineKeyboardButton();
-                //InlineKeyboardButton AliButton = new InlineKeyboardButton();
-                //InlineKeyboardButton AmaButton = new InlineKeyboardButton();
                 InlineKeyboardButton returnButton = new InlineKeyboardButton();
                 urlShops("Ridero", "ridero", button1, book, row1);
-/*    ref
-                RidButton.setText("Ridero");
-                RidButton.setUrl(book.getEmbedded(Arrays.asList("Shops", "ridero"), String.class));
-
- */
                 urlShops("ЛитРес", "litres", button2, book, row2);
-                /* dv
-                LitButton.setText("ЛитРес");
-                LitButton.setUrl(book.getEmbedded(Arrays.asList("Shops", "litres"), String.class));
-                WildButton.setText("Wildberries");
-                WildButton.setUrl(book.getEmbedded(Arrays.asList("Shops", "wildberries"), String.class));
-                */
                 urlShops("Wildberries", "wildberries", button3, book, row2);
                 urlShops("Ozon", "ozon", button4, book, row2);
                 urlShops("AliExpress", "aliexpress", button5, book, row3);
                 urlShops("Amazon", "amazon", button6, book, row3);
-                /*
-                OzonButton.setText("Ozon");
-                OzonButton.setUrl(book.getEmbedded(Arrays.asList("Shops", "ozon"), String.class));
-                AliButton.setText("AliExpress");
-                AliButton.setUrl(book.getEmbedded(Arrays.asList("Shops", "aliexpress"), String.class));
-                AmaButton.setText("Amazon");
-                AmaButton.setUrl(book.getEmbedded(Arrays.asList("Shops", "amazon"), String.class));
-                */
                 returnButton.setText("Вернуться");
                 returnButton.setCallbackData("BackShopsBook");
-                //fb row1.add(RidButton);
-                //rtg row2.add(LitButton);
-                //row2.add(WildButton);
-                //row2.add(OzonButton);
-                //row3.add(AliButton);
-                //row3.add(AmaButton);
                 row4.add(returnButton);
                 rowList.add(row1);
                 rowList.add(row2);
@@ -198,7 +170,6 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         button.setText(text);
         button.setUrl(book.getEmbedded(Arrays.asList("Shops", value), String.class));
         row.add(button);
-        //rowList.add(row);
     }
     private void createMessage(Message message, String text) {
         String user_first_name = message.getChat().getFirstName();
