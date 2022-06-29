@@ -83,6 +83,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 replacePhoto.setChatId(backMessage.getChatId().toString());
                 replacePhoto.setMessageId(Integer.valueOf(backMessage.getMessageId().toString()));
                 InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+                nextBook++;
                 createFirstKeyboard(update, inlineKeyboard, collection);
                 replacePhoto.setReplyMarkup(inlineKeyboard);
                 try {
@@ -192,12 +193,14 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             }
         }
     }
+
     public void urlShops(String text, String value, InlineKeyboardButton button, Document book,
-                         List<InlineKeyboardButton> row){
+                         List<InlineKeyboardButton> row) {
         button.setText(text);
         button.setUrl(book.getEmbedded(Arrays.asList("Shops", value), String.class));
         row.add(button);
     }
+
     private void createMessage(Message message, String text) {
         String user_first_name = message.getChat().getFirstName();
         String user_last_name = message.getChat().getLastName();
@@ -272,6 +275,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         photo.setPhoto(new InputFile(doc.getString("cover")));
         photo.setCaption("*" + doc.getString("name") + "*\n" + doc.getString("description"));
         InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+        nextBook++;
         createFirstKeyboard(update, inlineKeyboard, collection);
         photo.setReplyMarkup(inlineKeyboard);
         try {
@@ -297,24 +301,21 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         ExcerptButton.setCallbackData("ExcerptBook");
         row1.add(ShopsButton);
         rowList.add(row1);
-        nextBook++;
-        if (update.getCallbackQuery() != null) {
-            if (!update.getCallbackQuery().getData().equals("BackShopsBook") && NextBook) {
-                List<InlineKeyboardButton> row2 = new ArrayList<>();
-                for (int i = 1; i <= collection.countDocuments(); i++) {
-                    InlineKeyboardButton bookButton = new InlineKeyboardButton();
-                    if (nextBook == i) bookButton.setText("• " + i + " •");
-                    else bookButton.setText(String.valueOf(i));
-                    bookButton.setCallbackData(String.valueOf(i));
-                    row2.add(bookButton);
-                    NextBook = false;
-                }
-                rowList.add(row2);
-                InlineKeyboardButton PreviousButton = new InlineKeyboardButton();
-                PreviousButton.setText("Предыдущая книга");
-                PreviousButton.setCallbackData("PreviousBook");
-                row2_3.add(PreviousButton);
+        if (update.getCallbackQuery() != null && NextBook) {
+            //if (!update.getCallbackQuery().getData().equals("BackShopsBook")) nextBook++;
+            List<InlineKeyboardButton> row2 = new ArrayList<>();
+            for (int i = 1; i <= collection.countDocuments(); i++) {
+                InlineKeyboardButton bookButton = new InlineKeyboardButton();
+                if (nextBook == i) bookButton.setText("• " + i + " •");
+                else bookButton.setText(String.valueOf(i));
+                bookButton.setCallbackData(String.valueOf(i));
+                row2.add(bookButton);
             }
+            rowList.add(row2);
+            InlineKeyboardButton PreviousButton = new InlineKeyboardButton();
+            PreviousButton.setText("Предыдущая книга");
+            PreviousButton.setCallbackData("PreviousBook");
+            row2_3.add(PreviousButton);
         }
         row2_3.add(NextButton);
         row3_4.add(ExcerptButton);
