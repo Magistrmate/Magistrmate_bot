@@ -92,7 +92,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     e.printStackTrace();
                 }
             } else if (backText.equals("ExcerptBook")) {
-                System.out.println();
+                showBook = nextBook - 1;
+                Document book = collection.find().skip(showBook).first();
+                assert book != null;
                 EditMessageReplyMarkup keyboard = new EditMessageReplyMarkup();
                 keyboard.setChatId(backMessage.getChatId().toString());
                 keyboard.setMessageId(Integer.valueOf(backMessage.getMessageId().toString()));
@@ -110,7 +112,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 InlineKeyboardButton returnButton = new InlineKeyboardButton();
                 button1.setText("Online");
                 button1.setCallbackData("Online");
-                button1.setUrl("https://telegra.ph/Parallelno-zadavaya-vopros-06-28");
+                button1.setUrl(book.getString("excerpt"));
                 button2.setText("EPUB");
                 button2.setCallbackData("EPUB");
                 button3.setText("FB2");
@@ -225,25 +227,6 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         }
     }
 
-    private void createKeyboard(SendMessage createMessage) {
-        ReplyKeyboardMarkup createKeyboard = new ReplyKeyboardMarkup();
-        List<KeyboardRow> keyboard = new ArrayList<>();
-        KeyboardRow row1 = new KeyboardRow();
-        KeyboardRow row2 = new KeyboardRow();
-        row1.add("Книги");
-        row1.add("Аудиокниги");
-        row2.add("Контакты");
-        row2.add("Позвать оператора");
-        keyboard.add(row1);
-        keyboard.add(row2);
-        createKeyboard.setKeyboard(keyboard);
-        createKeyboard.setResizeKeyboard(true);
-        createKeyboard.setOneTimeKeyboard(true);
-        createKeyboard.setInputFieldPlaceholder("Общение");
-        createKeyboard.setSelective(true); //https://core.telegram.org/bots/api#replykeyboardmarkup
-        createMessage.setReplyMarkup(createKeyboard);
-    }
-
     private void createFewCovers(Message message, MongoCollection<Document> collection) {
 
         List<InputMedia> media = new ArrayList<>();
@@ -302,7 +285,6 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         row1.add(ShopsButton);
         rowList.add(row1);
         if (update.getCallbackQuery() != null && NextBook) {
-            //if (!update.getCallbackQuery().getData().equals("BackShopsBook")) nextBook++;
             List<InlineKeyboardButton> row2 = new ArrayList<>();
             for (int i = 1; i <= collection.countDocuments(); i++) {
                 InlineKeyboardButton bookButton = new InlineKeyboardButton();
@@ -322,6 +304,25 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         rowList.add(row2_3);
         rowList.add(row3_4);
         inlineKeyboard.setKeyboard(rowList);
+    }
+
+    private void createKeyboard(SendMessage createMessage) {
+        ReplyKeyboardMarkup createKeyboard = new ReplyKeyboardMarkup();
+        List<KeyboardRow> keyboard = new ArrayList<>();
+        KeyboardRow row1 = new KeyboardRow();
+        KeyboardRow row2 = new KeyboardRow();
+        row1.add("Книги");
+        row1.add("Аудиокниги");
+        row2.add("Контакты");
+        row2.add("Позвать оператора");
+        keyboard.add(row1);
+        keyboard.add(row2);
+        createKeyboard.setKeyboard(keyboard);
+        createKeyboard.setResizeKeyboard(true);
+        createKeyboard.setOneTimeKeyboard(true);
+        createKeyboard.setInputFieldPlaceholder("Общение");
+        createKeyboard.setSelective(true); //https://core.telegram.org/bots/api#replykeyboardmarkup
+        createMessage.setReplyMarkup(createKeyboard);
     }
 
     private void log(String first_name, String last_name, String user_username, String user_id, String txt, String bot_answer) {
