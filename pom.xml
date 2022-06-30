@@ -64,7 +64,7 @@
                     <assembleDirectory>target</assembleDirectory>
                     <programs>
                         <program>
-                            <mainClass>Main</mainClass> //тут пишем свой main class
+                            <mainClass>Works.Main</mainClass> //тут пишем свой main class
                             <name>name</name>
                         </program>
                     </programs>
@@ -86,7 +86,7 @@
                     <appName>magistrmatebot</appName>
                     <processTypes>
                         <worker>
-                            java $JAVA_OPTS -cp target/classes:target/dependency/* Main
+                            java $JAVA_OPTS -cp target/classes:target/dependency/* Works.Main
                         </worker>
                     </processTypes>
                 </configuration>

@@ -1,3 +1,6 @@
+package Works;
+
+import Works.BotConfig;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
@@ -5,6 +8,7 @@ import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
+import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMediaGroup;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
@@ -140,6 +144,8 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }
+            } else if (update.getCallbackQuery().getData().equals("EPUB")) {
+                createDocument(backMessage, collection);
             } else if (update.getCallbackQuery().getData().equals("ShopsBook")) {
                 showBook = nextBook - 1;
                 Document book = collection.find().skip(showBook).first();
@@ -255,7 +261,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         photo.setChatId(message.getChatId().toString());
         Document doc = collection.find().limit(1).first();
         assert doc != null;
-        photo.setPhoto(new InputFile(doc.getString("cover")));
+        photo.setPhoto(new InputFile(doc.getString("thumb")));
         photo.setCaption("*" + doc.getString("name") + "*\n" + doc.getString("description"));
         InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
         nextBook++;
@@ -263,6 +269,19 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         photo.setReplyMarkup(inlineKeyboard);
         try {
             execute(photo);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+    private void createDocument(Message message, MongoCollection<Document> collection) {
+        SendDocument document = new SendDocument();
+        document.setChatId(message.getChatId().toString());
+        Document doc = collection.find().limit(1).first();
+        assert doc != null;
+        document.setDocument(new InputFile(doc.getString("epub")));
+        document.setThumb(new InputFile(doc.getString("thumb")));
+        try {
+            execute(document);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
