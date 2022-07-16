@@ -1,11 +1,13 @@
-package Works;
-
-import Works.BotConfig;
+import com.mongodb.MongoException;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.Updates;
+import com.mongodb.client.result.UpdateResult;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
@@ -51,22 +53,34 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         MongoCollection<Document> collection = database.getCollection("MagistrmateCollection");
         Message message = update.getMessage();
         if (update.hasMessage()) {
-            String text = message.getText().toLowerCase(Locale.ROOT);
-            if (text.equals("/start")) {
-                createMessage(message, "Добро пожаловать " + message.getFrom().getFirstName() + "\\!\n" +
-                        "Мы можем перейти сразу к книгам или пообщаться\\. Я пока в процессе познания вашего мира," +
-                        " поэтому пишите и если не пойму, то выдам вам подсказки\\.");
-            } else if (text.contains("привет")) {
-                createMessage(message, "Дороу");
-            } else if (text.contains("книг") || text.contains("книж")) {
-                createFewCovers(message, collection);
-                createCover(update, message, collection);
+            if (message.hasDocument()) {
+                Document query = new Document().append( "_id",message.getCaption());
+                Bson updates = Updates.combine(Updates.set("fb2", update.getMessage().getDocument().getFileId()));
+                UpdateOptions options = new UpdateOptions().upsert(true);
+                try {
+                    collection.updateOne(query,updates,options);
+                } catch (MongoException me) {
+                    System.err.println("Unable" + me);
+                }
             } else {
-                createMessage(message, "Давайте вместе разберемся, чем я могу помочь");
+                String text = message.getText().toLowerCase(Locale.ROOT);
+                if (text.equals("/start")) {
+                    createMessage(message, "Добро пожаловать " + message.getFrom().getFirstName() + "\\!\n" +
+                            "Мы можем перейти сразу к книгам или пообщаться\\. Я пока в процессе познания вашего мира," +
+                            " поэтому пишите и если не пойму, то выдам вам подсказки\\.");
+                } else if (text.contains("привет")) {
+                    createMessage(message, "Дороу");
+                } else if (text.contains("книг") || text.contains("книж")) {
+                    createFewCovers(message, collection);
+                    createCover(update, message, collection);
+                } else {
+                    createMessage(message, "Давайте вместе разберемся, чем я могу помочь");
+                }
             }
         } else if (update.hasCallbackQuery()) {
             Message backMessage = update.getCallbackQuery().getMessage();
             String backText = update.getCallbackQuery().getData();
+            showBook = nextBook - 1;
             if (backText.equals("NextBook") || backText.equals("PreviousBook") || backText.matches(".*\\d+.*")) {
                 NextBook = true;
                 if (backText.equals("PreviousBook")) {
@@ -96,7 +110,6 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     e.printStackTrace();
                 }
             } else if (backText.equals("ExcerptBook")) {
-                showBook = nextBook - 1;
                 Document book = collection.find().skip(showBook).first();
                 assert book != null;
                 EditMessageReplyMarkup keyboard = new EditMessageReplyMarkup();
@@ -145,9 +158,10 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     e.printStackTrace();
                 }
             } else if (update.getCallbackQuery().getData().equals("EPUB")) {
-                createDocument(backMessage, collection);
+                createDocument(backMessage, collection, update.getCallbackQuery().getData());
+            } else if (update.getCallbackQuery().getData().equals("FB2")) {
+                createDocument(backMessage, collection, update.getCallbackQuery().getData());
             } else if (update.getCallbackQuery().getData().equals("ShopsBook")) {
-                showBook = nextBook - 1;
                 Document book = collection.find().skip(showBook).first();
                 assert book != null;
                 EditMessageReplyMarkup keyboard = new EditMessageReplyMarkup();
@@ -261,7 +275,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         photo.setChatId(message.getChatId().toString());
         Document doc = collection.find().limit(1).first();
         assert doc != null;
-        photo.setPhoto(new InputFile(doc.getString("thumb")));
+        photo.setPhoto(new InputFile(doc.getString("cover")));
         photo.setCaption("*" + doc.getString("name") + "*\n" + doc.getString("description"));
         InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
         nextBook++;
@@ -273,13 +287,14 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             e.printStackTrace();
         }
     }
-    private void createDocument(Message message, MongoCollection<Document> collection) {
+
+    private void createDocument(Message message, MongoCollection<Document> collection, String whichButton) {
+        String smallLetter = whichButton.toLowerCase(Locale.ROOT);
         SendDocument document = new SendDocument();
         document.setChatId(message.getChatId().toString());
-        Document doc = collection.find().limit(1).first();
+        Document doc = collection.find().skip(showBook).first();
         assert doc != null;
         document.setDocument(new InputFile(doc.getString("epub")));
-        document.setThumb(new InputFile(doc.getString("thumb")));
         try {
             execute(document);
         } catch (TelegramApiException e) {
