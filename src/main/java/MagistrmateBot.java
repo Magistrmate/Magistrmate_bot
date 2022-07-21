@@ -5,7 +5,6 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.Updates;
-import com.mongodb.client.result.UpdateResult;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -55,7 +54,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         if (update.hasMessage()) {
             if (message.hasDocument()) {
                 Document query = new Document().append( "_id",message.getCaption());
-                Bson updates = Updates.combine(Updates.set("fb2", update.getMessage().getDocument().getFileId()));
+                Bson updates = Updates.combine(Updates.set("pdf", update.getMessage().getDocument().getFileId()));
                 UpdateOptions options = new UpdateOptions().upsert(true);
                 try {
                     collection.updateOne(query,updates,options);
@@ -133,7 +132,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 button2.setText("EPUB");
                 button2.setCallbackData("EPUB");
                 button3.setText("FB2");
-                button3.setCallbackData("FB2");
+                button3.setCallbackData("FBTwo");
                 button4.setText("Текст в картинках");
                 button4.setCallbackData("Текст в картинках");
                 button5.setText("PDF");
@@ -159,7 +158,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 }
             } else if (update.getCallbackQuery().getData().equals("EPUB")) {
                 createDocument(backMessage, collection, update.getCallbackQuery().getData());
-            } else if (update.getCallbackQuery().getData().equals("FB2")) {
+            } else if (update.getCallbackQuery().getData().equals("FBTwo")) {
+                createDocument(backMessage, collection, update.getCallbackQuery().getData());
+            } else if (update.getCallbackQuery().getData().equals("PDF")) {
                 createDocument(backMessage, collection, update.getCallbackQuery().getData());
             } else if (update.getCallbackQuery().getData().equals("ShopsBook")) {
                 Document book = collection.find().skip(showBook).first();
@@ -248,9 +249,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     }
 
     private void createFewCovers(Message message, MongoCollection<Document> collection) {
-
         List<InputMedia> media = new ArrayList<>();
-
         List<Document> books = collection.find().skip(1).into(new ArrayList<>());
         for (Document book : books) {
             InputMedia photo = new InputMediaPhoto();
@@ -294,7 +293,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         document.setChatId(message.getChatId().toString());
         Document doc = collection.find().skip(showBook).first();
         assert doc != null;
-        document.setDocument(new InputFile(doc.getString("epub")));
+        document.setDocument(new InputFile(doc.getString(smallLetter)));
         try {
             execute(document);
         } catch (TelegramApiException e) {
