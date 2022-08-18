@@ -54,9 +54,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         System.out.println(update.getMessage().getFrom().getUserName());
         System.out.println(update.getMessage().getAuthorSignature());
         DateFormat dateFormat = new SimpleDateFormat("dd.MM.yy hh:mm:ss");
-        //Date date = new Date();
         System.out.println(dateFormat.format(update.getMessage().getDate()));
-        //System.out.println(update.getMessage().;
 
         MongoDatabase database = mongoClient.getDatabase("MagistrmateDatabase");
         MongoCollection<Document> collection = database.getCollection("MagistrmateCollection");
