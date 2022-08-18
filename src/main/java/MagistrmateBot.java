@@ -46,6 +46,18 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         MongoClient mongoClient = MongoClients.create(BotConfig.DB_TOKEN);
+        System.out.println(update.getMessage().getText());
+        System.out.println(update.getMessage().getMessageId());
+        System.out.println(update.getMessage().getChatId());
+        System.out.println(update.getMessage().getFrom().getFirstName());
+        System.out.println(update.getMessage().getFrom().getLastName());
+        System.out.println(update.getMessage().getFrom().getUserName());
+        System.out.println(update.getMessage().getAuthorSignature());
+        DateFormat dateFormat = new SimpleDateFormat("dd.MM.yy hh:mm:ss");
+        //Date date = new Date();
+        System.out.println(dateFormat.format(update.getMessage().getDate()));
+        //System.out.println(update.getMessage().;
+
         MongoDatabase database = mongoClient.getDatabase("MagistrmateDatabase");
         MongoCollection<Document> collection = database.getCollection("MagistrmateCollection");
         Message message = update.getMessage();
@@ -369,6 +381,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         createMessage.setReplyMarkup(createKeyboard);
     }
 
+///* okay
     private void log(String first_name, String last_name, String user_username, String user_id, String txt,
                      String bot_answer) {
         DateFormat dateFormat = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
@@ -376,5 +389,5 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         System.out.println(dateFormat.format(date));
         System.out.println(first_name + " " + last_name + " (" + user_id + " " + user_username + ")\n" + txt);
         System.out.println("Magistrmate Bot\n" + bot_answer);
-    }
+    }//*/
 }
