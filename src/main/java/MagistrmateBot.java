@@ -46,16 +46,15 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         MongoClient mongoClient = MongoClients.create(BotConfig.DB_TOKEN);
-        System.out.println(update.getMessage().getText());
-        System.out.println(update.getMessage().getMessageId());
-        System.out.println(update.getMessage().getChatId());
-        System.out.println(update.getMessage().getFrom().getFirstName());
-        System.out.println(update.getMessage().getFrom().getLastName());
-        System.out.println(update.getMessage().getFrom().getUserName());
-        System.out.println(update.getMessage().getAuthorSignature());
         DateFormat dateFormat = new SimpleDateFormat("dd.MM.yy hh:mm:ss");
-        System.out.println(dateFormat.format(update.getMessage().getDate()));
-
+        Date date = new Date();
+        System.out.println(dateFormat.format(date) + update.getMessage().getChatId() +
+                update.getMessage().getMessageId() + update.getMessage().getText() +
+                update.getMessage().getFrom().getFirstName() + update.getMessage().getFrom().getLastName() +
+                update.getMessage().getFrom().getUserName() + update.getMessage().getFrom().getId());
+        MongoDatabase databaseLog = mongoClient.getDatabase("Log");
+        MongoCollection<Document> collectionLog = databaseLog.getCollection("Log");
+        collectionLog.insertOne(new Document().append("_id", update.getMessage().getFrom().getUserName()));
         MongoDatabase database = mongoClient.getDatabase("MagistrmateDatabase");
         MongoCollection<Document> collection = database.getCollection("MagistrmateCollection");
         Message message = update.getMessage();
