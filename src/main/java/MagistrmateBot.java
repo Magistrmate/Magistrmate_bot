@@ -32,6 +32,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     Integer nextBook = 0;
     Integer showBook;
     Boolean NextBook = false;
+    String textLog;
 
     @Override
     public String getBotUsername() {
@@ -46,15 +47,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         MongoClient mongoClient = MongoClients.create(BotConfig.DB_TOKEN);
-        DateFormat dateFormat = new SimpleDateFormat("dd.MM.yy hh:mm:ss");
-        Date date = new Date();
-        System.out.println(dateFormat.format(date) + update.getMessage().getChatId() +
-                update.getMessage().getMessageId() + update.getMessage().getText() +
-                update.getMessage().getFrom().getFirstName() + update.getMessage().getFrom().getLastName() +
-                update.getMessage().getFrom().getUserName() + update.getMessage().getFrom().getId());
-        MongoDatabase databaseLog = mongoClient.getDatabase("Log");
-        MongoCollection<Document> collectionLog = databaseLog.getCollection("Log");
-        collectionLog.insertOne(new Document().append("_id", update.getMessage().getFrom().getUserName()));
+        createLog(update, mongoClient, update.getMessage().getText(), update.getMessage().getFrom().getUserName());
         MongoDatabase database = mongoClient.getDatabase("MagistrmateDatabase");
         MongoCollection<Document> collection = database.getCollection("MagistrmateCollection");
         Message message = update.getMessage();
@@ -224,6 +217,11 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 }
             }
         }
+        if (textLog == null) {
+            textLog = update.getCallbackQuery().getData();
+        }
+        createLog(update, mongoClient, textLog, "bot");
+        textLog = null;
     }
 
     public void urlShops(String text, InlineKeyboardButton button, Document book, List<InlineKeyboardButton> row) {
@@ -233,22 +231,14 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     }
 
     private void createMessage(Message message, String text) {
-        String user_first_name = message.getChat().getFirstName();
-        String user_last_name = message.getChat().getLastName();
-        String user_username = message.getChat().getUserName();
-        long user_id = message.getChat().getId();
-        String message_text = message.getText();
-        log(user_first_name, user_last_name, user_username, Long.toString(user_id), message_text, text);
-
+        textLog = text.replaceAll("\\\\", "");
         SendMessage createMessage = new SendMessage();
         createMessage.setChatId(message.getChatId().toString());
         createMessage.setText(text);
         createMessage.enableMarkdownV2(true);
-
         if (text.equals("Давайте вместе разберемся, чем я могу помочь")) {
             createKeyboard(createMessage);
         }
-
         try {
             execute(createMessage);
         } catch (TelegramApiException e) {
@@ -377,14 +367,20 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         createKeyboard.setSelective(true); //https://core.telegram.org/bots/api#replykeyboardmarkup
         createMessage.setReplyMarkup(createKeyboard);
     }
-
-///* okay
-    private void log(String first_name, String last_name, String user_username, String user_id, String txt,
-                     String bot_answer) {
-        DateFormat dateFormat = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
+    public void createLog(Update update, MongoClient mongoClient, String textLog, String who){
+        DateFormat dateFormat = new SimpleDateFormat("ddMMyyHHmmss");
         Date date = new Date();
-        System.out.println(dateFormat.format(date));
-        System.out.println(first_name + " " + last_name + " (" + user_id + " " + user_username + ")\n" + txt);
-        System.out.println("Magistrmate Bot\n" + bot_answer);
-    }//*/
+        MongoDatabase databaseLog = mongoClient.getDatabase("Log");
+        MongoCollection<Document> collectionLog = databaseLog.getCollection("Log");
+        try {
+            collectionLog.insertOne(new Document()
+                    .append("_id", update.getMessage().getFrom().getUserName())
+                    .append(dateFormat.format(date), textLog));
+        } catch (MongoException me) {
+            Document query = new Document().append("_id",update.getMessage().getFrom().getUserName());
+            Bson updates = Updates.combine(Updates.set(dateFormat.format(date), who + ": " + textLog));
+            UpdateOptions options = new UpdateOptions().upsert(true);
+            collectionLog.updateOne(query, updates, options);
+        }
+    }
 }
