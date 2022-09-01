@@ -28,11 +28,17 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Projections.excludeId;
+import static com.mongodb.client.model.Projections.include;
+
 public class MagistrmateBot extends TelegramLongPollingBot {
     Integer nextBook = 0;
     Integer showBook;
     Boolean NextBook = false;
     String textLog;
+    String Id;
+    String Info;
 
     @Override
     public String getBotUsername() {
@@ -47,7 +53,6 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         MongoClient mongoClient = MongoClients.create(BotConfig.DB_TOKEN);
-        createLog(update, mongoClient, update.getMessage().getText(), update.getMessage().getFrom().getFirstName());
         MongoDatabase database = mongoClient.getDatabase("MagistrmateDatabase");
         MongoCollection<Document> collection = database.getCollection("MagistrmateCollection");
         Message message = update.getMessage();
@@ -72,7 +77,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 } else if (text.contains("книг") || text.contains("книж")) {
                     createFewCovers(message, collection);
                     createCover(update, message, collection);
-                    createLog(update, mongoClient, "*показывает книги*", "bot");
+                    createLog(update, mongoClient, "*показывает книги*", "bot", false);
                 } else {
                     createMessage(message, "Давайте вместе разберемся, чем я могу помочь");
                 }
@@ -86,6 +91,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 if (backText.equals("previous")) {
                     if (nextBook == 1) nextBook = 5;
                     else nextBook = nextBook - 2;
+                    createLog(update, mongoClient, "*нажал на предыдущую книгу*", "Кнопка", true);
                 } else if (backText.matches(".*\\d+.*")) {
                     nextBook = Integer.parseInt(backText) - 1;
                 }
@@ -219,7 +225,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             }
         }
         if (textLog != null) {
-            createLog(update, mongoClient, textLog, "bot");
+            createLog(update, mongoClient, textLog, "bot", false);
             textLog = null;
         }
     }
@@ -369,18 +375,27 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         createMessage.setReplyMarkup(createKeyboard);
     }
 
-    public void createLog(Update update, MongoClient mongoClient, String textLog, String who) {
+    public void createLog(Update update, MongoClient mongoClient, String textLog, String who, Boolean keyboard) {
         DateFormat dateFormat = new SimpleDateFormat("ddMMyyHHmmss");
         Date date = new Date();
         MongoDatabase databaseLog = mongoClient.getDatabase("Log");
         MongoCollection<Document> collectionLog = databaseLog.getCollection("Log");
+        if (keyboard) {
+            Id = update.getCallbackQuery().getFrom().getId().toString();
+            System.out.println(collectionLog.find(eq("_id", Id)));
+            Info = String.valueOf(collectionLog.find(eq("_id", Id)).projection(include("Info")));
+        }
+        else {
+            Id = update.getMessage().getFrom().getId().toString();
+            Info = update.getMessage().toString();
+        }
         try {
             collectionLog.insertOne(new Document()
-                    .append("_id", update.getMessage().getFrom().getId())
-                    .append("Info", update.getMessage().toString())
+                    .append("_id", Id)
+                    .append("Info", Info)
                     .append(dateFormat.format(date), textLog));
         } catch (MongoException me) {
-            Document query = new Document().append("_id", update.getMessage().getFrom().getId());
+            Document query = new Document().append("_id", Id);
             Bson updates = Updates.combine(Updates.set(dateFormat.format(date), who + ": " + textLog));
             UpdateOptions options = new UpdateOptions().upsert(true);
             collectionLog.updateOne(query, updates, options);
