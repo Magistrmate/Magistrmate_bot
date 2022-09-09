@@ -28,10 +28,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Projections.excludeId;
-import static com.mongodb.client.model.Projections.include;
-
 public class MagistrmateBot extends TelegramLongPollingBot {
     Integer nextBook = 0;
     Integer showBook;
@@ -39,6 +35,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     String textLog;
     String Id;
     String Info;
+    String Answer;
+    String InfoLog;
+    String LengthDate;
 
     @Override
     public String getBotUsername() {
@@ -67,20 +66,23 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     System.err.println("Unable" + me);
                 }
             } else {
-                String text = message.getText().toLowerCase(Locale.ROOT);
+                String text = message.getText();
                 if (text.equals("/start")) {
                     createMessage(message, "Добро пожаловать " + message.getFrom().getFirstName() + "\\!\n" +
                             "Мы можем перейти сразу к книгам или пообщаться\\. Я пока в процессе познания вашего мира,"
                             + " поэтому пишите и если не пойму, то выдам вам подсказки\\.");
                 } else if (text.contains("привет")) {
                     createMessage(message, "Дороу");
-                } else if (text.contains("книг") || text.contains("книж")) {
+                } else if (text.toLowerCase(Locale.ROOT).contains("книг") ||
+                        text.toLowerCase(Locale.ROOT).contains("книж")) {
                     createFewCovers(message, collection);
                     createCover(update, message, collection);
-                    createLog(update, mongoClient, "*показывает книги*", "bot", false);
+                    textLog = "Показывает книги";
                 } else {
                     createMessage(message, "Давайте вместе разберемся, чем я могу помочь");
                 }
+                createLog(update, mongoClient, text, update.getMessage().getFrom().getFirstName(), false);
+                createLog(update, mongoClient, textLog, "bot", false);
             }
         } else if (update.hasCallbackQuery()) {
             Message backMessage = update.getCallbackQuery().getMessage();
@@ -88,13 +90,16 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             showBook = nextBook - 1;
             if (backText.equals("next") || backText.equals("previous") || backText.matches(".*\\d+.*")) {
                 NextBook = true;
+                InfoLog = "следующую книгу*";
                 if (backText.equals("previous")) {
                     if (nextBook == 1) nextBook = 5;
                     else nextBook = nextBook - 2;
-                    createLog(update, mongoClient, "*нажал на предыдущую книгу*", "Кнопка", true);
+                    InfoLog = "предыдущую книгу*";
                 } else if (backText.matches(".*\\d+.*")) {
                     nextBook = Integer.parseInt(backText) - 1;
+                    InfoLog = "кнопку " + backText + "*";
                 }
+                createLog(update, mongoClient, "*нажал на " + InfoLog, "Кнопка", true);
                 if (nextBook == collection.countDocuments()) nextBook = 0;
                 Document book = collection.find().skip(nextBook).first();
                 InputMedia photo = new InputMediaPhoto();
@@ -223,10 +228,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     e.printStackTrace();
                 }
             }
-        }
-        if (textLog != null) {
-            createLog(update, mongoClient, textLog, "bot", false);
-            textLog = null;
+            //createLog(update, mongoClient, textLog, "bot", true);
         }
     }
 
@@ -376,27 +378,30 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     }
 
     public void createLog(Update update, MongoClient mongoClient, String textLog, String who, Boolean keyboard) {
-        DateFormat dateFormat = new SimpleDateFormat("ddMMyyHHmmss");
+        DateFormat dateFormat = new SimpleDateFormat("ddMMyyHHmmssS");
         Date date = new Date();
+        if (dateFormat.format(date).length() == 15) LengthDate = dateFormat.format(date);
+        if (dateFormat.format(date).length() == 14) LengthDate = dateFormat.format(date) + " ";
+        if (dateFormat.format(date).length() == 13) LengthDate = dateFormat.format(date) + "  ";
         MongoDatabase databaseLog = mongoClient.getDatabase("Log");
         MongoCollection<Document> collectionLog = databaseLog.getCollection("Log");
         if (keyboard) {
             Id = update.getCallbackQuery().getFrom().getId().toString();
-            System.out.println(collectionLog.find(eq("_id", Id)));
-            Info = String.valueOf(collectionLog.find(eq("_id", Id)).projection(include("Info")));
-        }
-        else {
+            Info = "InfoKeyboard";
+            Answer = update.getCallbackQuery().getMessage().toString();
+        } else {
             Id = update.getMessage().getFrom().getId().toString();
-            Info = update.getMessage().toString();
+            Info = "Info";
+            Answer = update.getMessage().toString();
         }
         try {
             collectionLog.insertOne(new Document()
                     .append("_id", Id)
-                    .append("Info", Info)
+                    .append(Info, Answer)
                     .append(dateFormat.format(date), textLog));
         } catch (MongoException me) {
             Document query = new Document().append("_id", Id);
-            Bson updates = Updates.combine(Updates.set(dateFormat.format(date), who + ": " + textLog));
+            Bson updates = Updates.combine(Updates.set(LengthDate, who + ": " + textLog));
             UpdateOptions options = new UpdateOptions().upsert(true);
             collectionLog.updateOne(query, updates, options);
         }
