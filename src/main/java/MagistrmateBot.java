@@ -66,6 +66,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 }
             } else {
                 String text = message.getText().toLowerCase(Locale.ROOT);
+                createLog(update, mongoClient, text, "User", false);
                 if (text.equals("/start")) {
                     createMessage(message, "Добро пожаловать " + message.getFrom().getFirstName() + "\\!\n" +
                             "Мы можем перейти сразу к книгам или пообщаться\\. Я пока в процессе познания вашего мира,"
@@ -76,12 +77,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         text.toLowerCase(Locale.ROOT).contains("книж")) {
                     createFewCovers(message, collection, update, mongoClient);
                     createCover(update, message, collection, mongoClient);
-                    textLog = "Показывает книги";
                 } else {
                     createMessage(message, "Давайте вместе разберемся, чем я могу помочь", update, mongoClient);
                 }
-                /// createLog(update, mongoClient, text, "User", false);
-                //createLog(update, mongoClient, textLog, "Bot ", false);
             }
         } else if (update.hasCallbackQuery()) {
             Message backMessage = update.getCallbackQuery().getMessage();
@@ -115,6 +113,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 replacePhoto.setReplyMarkup(inlineKeyboard);
                 try {
                     execute(replacePhoto);
+                    createLog(update, mongoClient, "Перелистнул книгу", "Bot ", false);
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }
@@ -164,21 +163,18 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 keyboard.setReplyMarkup(inlineKeyboard);
                 try {
                     execute(keyboard);
+                    createLog(update, mongoClient, "Поменял клавиатуру на магазины", "Bot ", true);
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }
             } else if (update.getCallbackQuery().getData().equals("epub")) {
-                InfoLog = "EPUB*";
                 createDocument(backMessage, collection, update.getCallbackQuery().getData(), update, mongoClient);
             } else if (update.getCallbackQuery().getData().equals("fb-two")) {
-                InfoLog = "FB2*";
                 createDocument(backMessage, collection, update.getCallbackQuery().getData(), update, mongoClient);
             } else if (update.getCallbackQuery().getData().equals("pdf")) {
-                InfoLog = "PDF*";
-                createAudio(backMessage, collection, update.getCallbackQuery().getData());
-            } else if (update.getCallbackQuery().getData().equals("audio")) {
-                InfoLog = "Аудио*";
                 createDocument(backMessage, collection, update.getCallbackQuery().getData(), update, mongoClient);
+            } else if (update.getCallbackQuery().getData().equals("audio")) {
+                createAudio(backMessage, collection, update.getCallbackQuery().getData(), update, mongoClient);
             } else if (update.getCallbackQuery().getData().equals("shops")) {
                 InfoLog = "Книга в магазинах*";
                 Document book = collection.find().skip(showBook).first();
@@ -254,7 +250,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         }
         try {
             execute(createMessage);
-            createLog(update, mongoClient, textLog, "User", false);
+            createLog(update, mongoClient, textLog, "Bot ", false);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
@@ -275,7 +271,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         mediaGroup.setMedias(media);
         try {
             execute(mediaGroup);
-            createLog(update, mongoClient, textLog, "Bot ", false);
+            createLog(update, mongoClient, "Показал несколько обложек", "Bot ", false);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
@@ -295,7 +291,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         photo.setReplyMarkup(inlineKeyboard);
         try {
             execute(photo);
-            createLog(update, mongoClient, textLog, "Bot ", false);
+            createLog(update, mongoClient, "Показал обложку с кнопками", "Bot ", false);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
@@ -310,13 +306,12 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         document.setDocument(new InputFile(doc.getString(whichButton)));
         try {
             execute(document);
-            createLog(update, mongoClient, "*Прислал документ " + InfoLog, "Bot ", true);
+            createLog(update, mongoClient, "*Прислал документ " + update.getCallbackQuery().getData(), "Bot ", true);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
     }
-
-    private void createAudio(Message message, MongoCollection<Document> collection, String whichButton) {
+    private void createAudio(Message message, MongoCollection<Document> collection, String whichButton, Update update, MongoClient mongoClient) {
         SendAudio audio = new SendAudio();
         audio.setChatId(message.getChatId().toString());
         Document doc = collection.find().skip(showBook).first();
@@ -324,6 +319,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         audio.setAudio(new InputFile(doc.getString(whichButton)));
         try {
             execute(audio);
+            createLog(update, mongoClient, "*Прислал аудио " + update.getCallbackQuery().getData(), "Bot ", true);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
