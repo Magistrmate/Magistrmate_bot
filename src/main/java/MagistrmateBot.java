@@ -36,7 +36,6 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     String Id;
     String Info;
     String Answer;
-    String InfoLog;
 
     @Override
     public String getBotUsername() {
@@ -73,8 +72,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                             + " поэтому пишите и если не пойму, то выдам вам подсказки\\.", update, mongoClient);
                 } else if (text.contains("прив")) {
                     createMessage(message, "Дороу", update, mongoClient);
-                } else if (text.toLowerCase(Locale.ROOT).contains("книг") ||
-                        text.toLowerCase(Locale.ROOT).contains("книж")) {
+                } else if (text.toLowerCase(Locale.ROOT).contains("книг") || text.toLowerCase(Locale.ROOT).contains("книж")) {
                     createFewCovers(message, collection, update, mongoClient);
                     createCover(update, message, collection, mongoClient);
                 } else {
@@ -84,17 +82,15 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         } else if (update.hasCallbackQuery()) {
             Message backMessage = update.getCallbackQuery().getMessage();
             String backText = update.getCallbackQuery().getData();
+            createLog(update, mongoClient, "*Нажал на кнопку " + backText + "*", "User", true);
             showBook = nextBook - 1;
             if (backText.equals("next") || backText.equals("previous") || backText.matches(".*\\d+.*")) {
                 NextBook = true;
-                InfoLog = "следующую книгу*";
                 if (backText.equals("previous")) {
                     if (nextBook == 1) nextBook = 5;
                     else nextBook = nextBook - 2;
-                    InfoLog = "предыдущую книгу*";
                 } else if (backText.matches(".*\\d+.*")) {
                     nextBook = Integer.parseInt(backText) - 1;
-                    InfoLog = "кнопку " + backText + "*";
                 }
                 if (nextBook == collection.countDocuments()) nextBook = 0;
                 Document book = collection.find().skip(nextBook).first();
@@ -113,12 +109,11 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 replacePhoto.setReplyMarkup(inlineKeyboard);
                 try {
                     execute(replacePhoto);
-                    createLog(update, mongoClient, "Перелистнул книгу", "Bot ", false);
+                    createLog(update, mongoClient, "*Перелистнул книгу*", "Bot ", true);
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }
             } else if (backText.equals("excerpt")) {
-                InfoLog = "Отрывок из книги*";
                 Document book = collection.find().skip(showBook).first();
                 assert book != null;
                 EditMessageReplyMarkup keyboard = new EditMessageReplyMarkup();
@@ -163,20 +158,19 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 keyboard.setReplyMarkup(inlineKeyboard);
                 try {
                     execute(keyboard);
-                    createLog(update, mongoClient, "Поменял клавиатуру на магазины", "Bot ", true);
+                    createLog(update, mongoClient, "*Поменял клавиатуру на отрывки*", "Bot ", true);
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }
             } else if (update.getCallbackQuery().getData().equals("epub")) {
-                createDocument(backMessage, collection, update.getCallbackQuery().getData(), update, mongoClient);
+                createDocument(backMessage, collection, update.getCallbackQuery().getData(), update, mongoClient, backText);
             } else if (update.getCallbackQuery().getData().equals("fb-two")) {
-                createDocument(backMessage, collection, update.getCallbackQuery().getData(), update, mongoClient);
+                createDocument(backMessage, collection, update.getCallbackQuery().getData(), update, mongoClient, backText);
             } else if (update.getCallbackQuery().getData().equals("pdf")) {
-                createDocument(backMessage, collection, update.getCallbackQuery().getData(), update, mongoClient);
+                createDocument(backMessage, collection, update.getCallbackQuery().getData(), update, mongoClient, backText);
             } else if (update.getCallbackQuery().getData().equals("audio")) {
-                createAudio(backMessage, collection, update.getCallbackQuery().getData(), update, mongoClient);
+                createAudio(backMessage, collection, update.getCallbackQuery().getData(), update, mongoClient, backText);
             } else if (update.getCallbackQuery().getData().equals("shops")) {
-                InfoLog = "Книга в магазинах*";
                 Document book = collection.find().skip(showBook).first();
                 assert book != null;
                 EditMessageReplyMarkup keyboard = new EditMessageReplyMarkup();
@@ -212,11 +206,11 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 keyboard.setReplyMarkup(inlineKeyboard);
                 try {
                     execute(keyboard);
+                    createLog(update, mongoClient, "*Отобразил клавиатуру " + backText + "*", "Bot ", true);
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }
             } else if (backText.equals("return")) {
-                InfoLog = "Вернуться*";
                 EditMessageReplyMarkup backKeyboard = new EditMessageReplyMarkup();
                 backKeyboard.setChatId(backMessage.getChatId().toString());
                 backKeyboard.setMessageId(Integer.valueOf(backMessage.getMessageId().toString()));
@@ -225,11 +219,11 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 backKeyboard.setReplyMarkup(inlineKeyboard);
                 try {
                     execute(backKeyboard);
+                    createLog(update, mongoClient, "*Вернул старую клавиатуру*", "Bot ", true);
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }
             }
-            //createLog(update, mongoClient, "*нажал на " + InfoLog, "User", true);
         }
     }
 
@@ -245,9 +239,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         createMessage.setChatId(message.getChatId().toString());
         createMessage.setText(text);
         createMessage.enableMarkdownV2(true);
-        if (text.equals("Давайте вместе разберемся, чем я могу помочь")) {
-            createKeyboard(createMessage);
-        }
+        if (text.equals("Давайте вместе разберемся, чем я могу помочь")) createKeyboard(createMessage, update, mongoClient);
         try {
             execute(createMessage);
             createLog(update, mongoClient, textLog, "Bot ", false);
@@ -271,7 +263,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         mediaGroup.setMedias(media);
         try {
             execute(mediaGroup);
-            createLog(update, mongoClient, "Показал несколько обложек", "Bot ", false);
+            createLog(update, mongoClient, "*Показал несколько обложек*", "Bot ", false);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
@@ -291,14 +283,14 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         photo.setReplyMarkup(inlineKeyboard);
         try {
             execute(photo);
-            createLog(update, mongoClient, "Показал обложку с кнопками", "Bot ", false);
+            createLog(update, mongoClient, "*Показал обложку с кнопками*", "Bot ", false);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
     }
 
-    private void createDocument(Message message, MongoCollection<Document> collection, String whichButton, Update update, MongoClient mongoClient) {
-        createLog(update, mongoClient, "*нажал на " + InfoLog, "User", true);
+    private void createDocument(Message message, MongoCollection<Document> collection, String whichButton,
+                                Update update, MongoClient mongoClient, String backText) {
         SendDocument document = new SendDocument();
         document.setChatId(message.getChatId().toString());
         Document doc = collection.find().skip(showBook).first();
@@ -306,12 +298,14 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         document.setDocument(new InputFile(doc.getString(whichButton)));
         try {
             execute(document);
-            createLog(update, mongoClient, "*Прислал документ " + update.getCallbackQuery().getData(), "Bot ", true);
+            createLog(update, mongoClient, "*Прислал документ " + backText + "*", "Bot ", true);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
     }
-    private void createAudio(Message message, MongoCollection<Document> collection, String whichButton, Update update, MongoClient mongoClient) {
+
+    private void createAudio(Message message, MongoCollection<Document> collection, String whichButton, Update update,
+                             MongoClient mongoClient, String backText) {
         SendAudio audio = new SendAudio();
         audio.setChatId(message.getChatId().toString());
         Document doc = collection.find().skip(showBook).first();
@@ -319,14 +313,13 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         audio.setAudio(new InputFile(doc.getString(whichButton)));
         try {
             execute(audio);
-            createLog(update, mongoClient, "*Прислал аудио " + update.getCallbackQuery().getData(), "Bot ", true);
+            createLog(update, mongoClient, "*Прислал аудио " + backText + "*", "Bot ", true);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
     }
 
-    public void createFirstKeyboard(Update update, InlineKeyboardMarkup inlineKeyboard,
-                                    MongoCollection<Document> collection) {
+    public void createFirstKeyboard(Update update, InlineKeyboardMarkup inlineKeyboard, MongoCollection<Document> collection) {
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
         InlineKeyboardButton ShopsButton = new InlineKeyboardButton();
         InlineKeyboardButton NextButton = new InlineKeyboardButton();
@@ -364,7 +357,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         inlineKeyboard.setKeyboard(rowList);
     }
 
-    private void createKeyboard(SendMessage createMessage) {
+    private void createKeyboard(SendMessage createMessage, Update update, MongoClient mongoClient) {
         ReplyKeyboardMarkup createKeyboard = new ReplyKeyboardMarkup();
         List<KeyboardRow> keyboard = new ArrayList<>();
         KeyboardRow row1 = new KeyboardRow();
@@ -381,6 +374,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         createKeyboard.setInputFieldPlaceholder("Общение");
         createKeyboard.setSelective(true); //https://core.telegram.org/bots/api#replykeyboardmarkup
         createMessage.setReplyMarkup(createKeyboard);
+        createLog(update, mongoClient, "*Клавиатуру нарисовал*", "Bot ", false);
     }
 
     public void createLog(Update update, MongoClient mongoClient, String textLog, String who, Boolean keyboard) {
@@ -398,10 +392,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             Answer = update.getMessage().toString();
         }
         try {
-            collectionLog.insertOne(new Document()
-                    .append("_id", Id)
-                    .append(Info, Answer)
-                    .append(dateFormat.format(date), textLog));
+            collectionLog.insertOne(new Document().append("_id", Id).append(Info, Answer).append(dateFormat.format(date), textLog));
         } catch (MongoException me) {
             Document query = new Document().append("_id", Id);
             Bson updates = Updates.combine(Updates.set(dateFormat.format(date), who + ": " + textLog));
