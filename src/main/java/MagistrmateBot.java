@@ -3,6 +3,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.Updates;
 import org.bson.Document;
@@ -36,6 +37,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     String Id;
     String Info;
     String Answer;
+    String Script;
 
     @Override
     public String getBotUsername() {
@@ -70,11 +72,29 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     createMessage(message, "Добро пожаловать " + message.getFrom().getFirstName() + "\\!\n" +
                             "Мы можем перейти сразу к книгам или пообщаться\\. Я пока в процессе познания вашего мира,"
                             + " поэтому пишите и если не пойму, то выдам вам подсказки\\.", update, mongoClient);
-                } else if (text.contains("прив")) {
+                } else if (text.contains("прив") || text.contains("хай")) {
                     createMessage(message, "Дороу", update, mongoClient);
                 } else if (text.toLowerCase(Locale.ROOT).contains("книг") || text.toLowerCase(Locale.ROOT).contains("книж")) {
                     createFewCovers(message, collection, update, mongoClient);
                     createCover(update, message, collection, mongoClient);
+                } else if (text.contains("оператор")) {
+                    createMessage(message, "Ща свистну", update, mongoClient);
+                    MongoDatabase databaseLog = mongoClient.getDatabase("Log");
+                    MongoCollection<Document> collectionLog = databaseLog.getCollection("Log");
+                    // u FindIterable<Document> results = collection.find(new Document());
+                    //System.out.println(collection.find().sort(new Document("_id", 411435416)).limit(3));
+                    Bson filter = Filters.text("16:24");
+                    collectionLog.find(filter).forEach(doc -> System.out.println(doc.toJson()));
+/*                  wf
+                    SendMessage createMessage = new SendMessage();
+                    createMessage.setChatId("5791523535");
+                    createMessage.setText("hg");
+                    createMessage.enableMarkdownV2(true);
+                    try {
+                        execute(createMessage);
+                    } catch (TelegramApiException e) {
+                        e.printStackTrace();
+                    }*/
                 } else {
                     createMessage(message, "Давайте вместе разберемся, чем я могу помочь", update, mongoClient);
                 }
@@ -378,8 +398,15 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     }
 
     public void createLog(Update update, MongoClient mongoClient, String textLog, String who, Boolean keyboard) {
-        DateFormat dateFormat = new SimpleDateFormat("ddMMyyHHmmssSSS");
+        DateFormat dateFormat = new SimpleDateFormat("dd/MM/yy");
+        DateFormat dateFormatLog = new SimpleDateFormat("HH:mm");
         Date date = new Date();
+        /* tomorrow
+        Calendar calendar = new GregorianCalendar();
+        calendar.setTime(date);
+        calendar.add(Calendar.DATE, 1);
+        date = calendar.getTime();
+        */
         MongoDatabase databaseLog = mongoClient.getDatabase("Log");
         MongoCollection<Document> collectionLog = databaseLog.getCollection("Log");
         if (keyboard) {
@@ -392,10 +419,13 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             Answer = update.getMessage().toString();
         }
         try {
-            collectionLog.insertOne(new Document().append("_id", Id).append(Info, Answer).append(dateFormat.format(date), textLog));
+            collectionLog.insertOne(new Document().append("_id", Id).append(Info, Answer).append(dateFormat.format(date), dateFormatLog.format(date) + " " + who + ": " + textLog + "\n"));
         } catch (MongoException me) {
+            Document doc = collectionLog.find(Filters.eq("_id", Id)).first();
+            assert doc != null;
             Document query = new Document().append("_id", Id);
-            Bson updates = Updates.combine(Updates.set(dateFormat.format(date), who + ": " + textLog));
+            if (doc.getString(dateFormat.format(date)) == null) Script = ""; else Script = doc.getString(dateFormat.format(date));
+            Bson updates = Updates.combine(Updates.set(dateFormat.format(date), Script + dateFormatLog.format(date) + " " + who + ": " + textLog + "\n"));
             UpdateOptions options = new UpdateOptions().upsert(true);
             collectionLog.updateOne(query, updates, options);
         }
