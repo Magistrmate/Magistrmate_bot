@@ -9,6 +9,7 @@ import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.*;
@@ -75,9 +76,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     String text = message.getText().toLowerCase(Locale.ROOT);
                     createLog(update, mongoClient, text, "User", false);
                     if (text.equals("/start")) {
-                        createMessage(message, "Добро пожаловать " + message.getFrom().getFirstName() + "\\!\n" +
-                                "Мы можем перейти сразу к книгам или пообщаться\\. Я пока в процессе познания вашего мира,"
-                                + " поэтому пишите и если не пойму, то выдам вам подсказки\\.", update, mongoClient);
+                        createMessage(message, "Добро пожаловать " + message.getFrom().getFirstName() + "\\!\n" + "Мы можем перейти сразу к книгам или пообщаться\\. Я пока в процессе познания вашего мира," + " поэтому пишите и если не пойму, то выдам вам подсказки\\.", update, mongoClient);
                     } else if (text.contains("прив") || text.contains("хай")) {
                         createMessage(message, "Дороу", update, mongoClient);
                     } else if (text.toLowerCase(Locale.ROOT).contains("книг") || text.toLowerCase(Locale.ROOT).contains("книж")) {
@@ -204,6 +203,16 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 }
             } else if (update.getCallbackQuery().getData().equals("epub")) {
                 createDocument(backMessage, collection, update.getCallbackQuery().getData(), update, mongoClient, backText);
+                AnswerCallbackQuery answer = new AnswerCallbackQuery();
+                String idCall = update.getCallbackQuery().getId();
+                answer.setCallbackQueryId(idCall);
+                answer.setText("piska");
+                answer.setShowAlert(false);
+                try{
+                    execute(answer);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
             } else if (update.getCallbackQuery().getData().equals("fb-two")) {
                 createDocument(backMessage, collection, update.getCallbackQuery().getData(), update, mongoClient, backText);
             } else if (update.getCallbackQuery().getData().equals("pdf")) {
@@ -330,8 +339,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         }
     }
 
-    private void createDocument(Message message, MongoCollection<Document> collection, String whichButton,
-                                Update update, MongoClient mongoClient, String backText) {
+    private void createDocument(Message message, MongoCollection<Document> collection, String whichButton, Update update, MongoClient mongoClient, String backText) {
         SendDocument document = new SendDocument();
         document.setChatId(message.getChatId().toString());
         Document doc = collection.find().skip(showBook).first();
@@ -345,8 +353,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         }
     }
 
-    private void createAudio(Message message, MongoCollection<Document> collection, String whichButton, Update update,
-                             MongoClient mongoClient, String backText) {
+    private void createAudio(Message message, MongoCollection<Document> collection, String whichButton, Update update, MongoClient mongoClient, String backText) {
         SendAudio audio = new SendAudio();
         audio.setChatId(message.getChatId().toString());
         Document doc = collection.find().skip(showBook).first();
