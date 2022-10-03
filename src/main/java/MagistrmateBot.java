@@ -38,6 +38,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     String Info;
     String Answer;
     String Script;
+    Boolean BotLive = true;
+    String messageGuest;
+    String messageFrom;
 
     @Override
     public String getBotUsername() {
@@ -56,50 +59,67 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         MongoCollection<Document> collection = database.getCollection("MagistrmateCollection");
         Message message = update.getMessage();
         if (update.hasMessage()) {
-            if (message.hasAudio() || message.hasDocument()) {
-                Document query = new Document().append("_id", message.getCaption());
-                Bson updates = Updates.combine(Updates.set("audio", update.getMessage().getAudio().getFileId()));
-                UpdateOptions options = new UpdateOptions().upsert(true);
-                try {
-                    collection.updateOne(query, updates, options);
-                } catch (MongoException me) {
-                    System.err.println("Unable" + me);
+            messageFrom = update.getMessage().getFrom().getId().toString();
+            if (BotLive) {
+                messageGuest = update.getMessage().getFrom().getId().toString();
+                if (message.hasAudio() || message.hasDocument()) {
+                    Document query = new Document().append("_id", message.getCaption());
+                    Bson updates = Updates.combine(Updates.set("audio", update.getMessage().getAudio().getFileId()));
+                    UpdateOptions options = new UpdateOptions().upsert(true);
+                    try {
+                        collection.updateOne(query, updates, options);
+                    } catch (MongoException me) {
+                        System.err.println("Unable" + me);
+                    }
+                } else {
+                    String text = message.getText().toLowerCase(Locale.ROOT);
+                    createLog(update, mongoClient, text, "User", false);
+                    if (text.equals("/start")) {
+                        createMessage(message, "Добро пожаловать " + message.getFrom().getFirstName() + "\\!\n" +
+                                "Мы можем перейти сразу к книгам или пообщаться\\. Я пока в процессе познания вашего мира,"
+                                + " поэтому пишите и если не пойму, то выдам вам подсказки\\.", update, mongoClient);
+                    } else if (text.contains("прив") || text.contains("хай")) {
+                        createMessage(message, "Дороу", update, mongoClient);
+                    } else if (text.toLowerCase(Locale.ROOT).contains("книг") || text.toLowerCase(Locale.ROOT).contains("книж")) {
+                        createFewCovers(message, collection, update, mongoClient);
+                        createCover(update, message, collection, mongoClient);
+                    } else if (text.contains("оператор")) {
+                        createMessage(message, "Ща свистну", update, mongoClient);
+                        MongoDatabase databaseLog = mongoClient.getDatabase("Log");
+                        MongoCollection<Document> collectionLog = databaseLog.getCollection("Log");
+                        Document doc = collectionLog.find(Filters.eq("_id", Id)).first();
+                        SendMessage createMessage = new SendMessage();
+                        createMessage.setChatId(BotConfig.ID_SUPPORT);
+                        DateFormat dateFormat = new SimpleDateFormat("dd/MM/yy");
+                        Date date = new Date();
+                        assert doc != null;
+                        createMessage.setText(doc.getString(dateFormat.format(date)));
+                        createMessage.enableMarkdownV2(false);
+                        BotLive = false;
+                        try {
+                            execute(createMessage);
+                        } catch (TelegramApiException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        createMessage(message, "Давайте вместе разберемся, чем я могу помочь", update, mongoClient);
+                    }
                 }
             } else {
-                String text = message.getText().toLowerCase(Locale.ROOT);
-                createLog(update, mongoClient, text, "User", false);
-                if (text.equals("/start")) {
-                    createMessage(message, "Добро пожаловать " + message.getFrom().getFirstName() + "\\!\n" +
-                            "Мы можем перейти сразу к книгам или пообщаться\\. Я пока в процессе познания вашего мира,"
-                            + " поэтому пишите и если не пойму, то выдам вам подсказки\\.", update, mongoClient);
-                } else if (text.contains("прив") || text.contains("хай")) {
-                    createMessage(message, "Дороу", update, mongoClient);
-                } else if (text.toLowerCase(Locale.ROOT).contains("книг") || text.toLowerCase(Locale.ROOT).contains("книж")) {
-                    createFewCovers(message, collection, update, mongoClient);
-                    createCover(update, message, collection, mongoClient);
-                } else if (text.contains("оператор")) {
-                    createMessage(message, "Ща свистну", update, mongoClient);
-                    MongoDatabase databaseLog = mongoClient.getDatabase("Log");
-                    MongoCollection<Document> collectionLog = databaseLog.getCollection("Log");
-                    // u FindIterable<Document> results = collection.find(new Document());
-                    //System.out.println(collection.find().sort(new Document("_id", 411435416)).limit(3));
-                    Bson filter = Filters.text("16:24");
-                    collectionLog.find(filter).forEach(doc -> System.out.println(doc.toJson()));
-/*                  wf
-                    SendMessage createMessage = new SendMessage();
-                    createMessage.setChatId("5791523535");
-                    createMessage.setText("hg");
-                    createMessage.enableMarkdownV2(true);
-                    try {
-                        execute(createMessage);
-                    } catch (TelegramApiException e) {
-                        e.printStackTrace();
-                    }*/
-                } else {
-                    createMessage(message, "Давайте вместе разберемся, чем я могу помочь", update, mongoClient);
+                SendMessage createMessage = new SendMessage();
+                if (messageFrom.equals(BotConfig.ID_SUPPORT)) {
+                    messageFrom = messageGuest;
+                } else messageFrom = BotConfig.ID_SUPPORT;
+                createMessage.setChatId(messageFrom);
+                createMessage.setText(message.getText());
+                try {
+                    execute(createMessage);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
                 }
             }
-        } else if (update.hasCallbackQuery()) {
+        }
+        if (update.hasCallbackQuery()) {
             Message backMessage = update.getCallbackQuery().getMessage();
             String backText = update.getCallbackQuery().getData();
             createLog(update, mongoClient, "*Нажал на кнопку " + backText + "*", "User", true);
@@ -259,7 +279,8 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         createMessage.setChatId(message.getChatId().toString());
         createMessage.setText(text);
         createMessage.enableMarkdownV2(true);
-        if (text.equals("Давайте вместе разберемся, чем я могу помочь")) createKeyboard(createMessage, update, mongoClient);
+        if (text.equals("Давайте вместе разберемся, чем я могу помочь"))
+            createKeyboard(createMessage, update, mongoClient);
         try {
             execute(createMessage);
             createLog(update, mongoClient, textLog, "Bot ", false);
@@ -424,7 +445,8 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             Document doc = collectionLog.find(Filters.eq("_id", Id)).first();
             assert doc != null;
             Document query = new Document().append("_id", Id);
-            if (doc.getString(dateFormat.format(date)) == null) Script = ""; else Script = doc.getString(dateFormat.format(date));
+            if (doc.getString(dateFormat.format(date)) == null) Script = "";
+            else Script = doc.getString(dateFormat.format(date));
             Bson updates = Updates.combine(Updates.set(dateFormat.format(date), Script + dateFormatLog.format(date) + " " + who + ": " + textLog + "\n"));
             UpdateOptions options = new UpdateOptions().upsert(true);
             collectionLog.updateOne(query, updates, options);
