@@ -38,7 +38,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     String Info;
     String Answer;
     String Script;
-    Boolean BotLive = true;
+    String BotLiveWithId = "";
     String messageGuest;
     String messageFrom;
 
@@ -60,7 +60,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         Message message = update.getMessage();
         if (update.hasMessage()) {
             messageFrom = update.getMessage().getFrom().getId().toString();
-            if (BotLive) {
+            if (!BotLiveWithId.equals(messageGuest)) {
                 messageGuest = update.getMessage().getFrom().getId().toString();
                 if (message.hasAudio() || message.hasDocument()) {
                     Document query = new Document().append("_id", message.getCaption());
@@ -96,7 +96,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         assert doc != null;
                         createMessage.setText(doc.getString(dateFormat.format(date)));
                         createMessage.enableMarkdownV2(false);
-                        BotLive = false;
+                        BotLiveWithId = messageGuest;
                         try {
                             execute(createMessage);
                         } catch (TelegramApiException e) {
@@ -108,6 +108,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     }
                 }
             } else {
+                if (messageFrom.equals(BotConfig.ID_SUPPORT) && message.getText().contains("До свидания")) {
+                    BotLiveWithId = "";
+                }
                 SendMessage createMessage = new SendMessage();
                 if (messageFrom.equals(BotConfig.ID_SUPPORT)) {
                     messageFrom = messageGuest;
