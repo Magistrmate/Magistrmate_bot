@@ -75,17 +75,17 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     String text = message.getText().toLowerCase(Locale.ROOT);
                     createLog(update, mongoClient, text, "User", false);
                     if (text.equals("/start")) {
-                        createMessage(message, "Добро пожаловать " + message.getFrom().getFirstName() + "\\!\n" +
+                        createMessage(message, "Добро пожаловать " + message.getFrom().getFirstName() + "\\!👋\n" +
                                 "Мы можем перейти сразу к книгам или пообщаться\\. Я пока в процессе познания вашего " +
                                 "мира, поэтому пишите и если не пойму, то выдам вам подсказки\\.", update, mongoClient);
                     } else if (text.contains("прив") || text.contains("хай")) {
-                        createMessage(message, "Дороу", update, mongoClient);
+                        createMessage(message, "Здравствуйте🤖", update, mongoClient);
                     } else if (text.toLowerCase(Locale.ROOT).contains("книг") ||
                             text.toLowerCase(Locale.ROOT).contains("книж")) {
                         createFewCovers(message, collection, update, mongoClient);
                         createCover(update, message, collection, mongoClient);
                     } else if (text.contains("оператор")) {
-                        createMessage(message, "Ща свистну", update, mongoClient);
+                        createMessage(message, "Сейчас позову, минутку🗣", update, mongoClient);
                         MongoDatabase databaseLog = mongoClient.getDatabase("Log");
                         MongoCollection<Document> collectionLog = databaseLog.getCollection("Log");
                         Document doc = collectionLog.find(Filters.eq("_id", Id)).first();
@@ -102,15 +102,19 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         } catch (TelegramApiException e) {
                             e.printStackTrace();
                         }
+                    } else if (text.contains("контакты")) {
+                        createMessage(message, "Я @magistrmate родился и вырос в провинциальном городке далеко от столицы\\. " +
+                                "С 18 лет жил в Москве, получил два высших технических образования и продолжаю " +
+                                "работать в той же сфере\\. У меня есть жена, собака и острое желание писать свои " +
+                                "истории для вас\\.✍", update, mongoClient);
                     } else {
-                        createMessage(message, "Давайте вместе разберемся, чем я могу помочь", update,
+                        createMessage(message, "Давайте вместе разберемся, чем я могу помочь🤔", update,
                                 mongoClient);
                     }
                 }
             } else {
-                if (messageFrom.equals(BotConfig.ID_SUPPORT) && message.getText().contains("До свидания")) {
+                if (messageFrom.equals(BotConfig.ID_SUPPORT) && message.getText().contains("До свидания"))
                     BotLiveWithId = "";
-                }
                 SendMessage createMessage = new SendMessage();
                 if (messageFrom.equals(BotConfig.ID_SUPPORT)) {
                     messageFrom = messageGuest;
@@ -176,18 +180,18 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 InlineKeyboardButton button4 = new InlineKeyboardButton();
                 InlineKeyboardButton button5 = new InlineKeyboardButton();
                 InlineKeyboardButton returnButton = new InlineKeyboardButton();
-                button1.setText("Online");
+                button1.setText("Online🌍");
                 button1.setCallbackData("online");
                 button1.setUrl(book.getString("excerpt"));
-                button2.setText("EPUB");
+                button2.setText("EPUB📘");
                 button2.setCallbackData("epub");
-                button3.setText("FB2");
+                button3.setText("FB2📙");
                 button3.setCallbackData("fb-two");
-                button4.setText("PDF");
+                button4.setText("PDF📕");
                 button4.setCallbackData("pdf");
-                button5.setText("Аудио");
+                button5.setText("Аудио🎧");
                 button5.setCallbackData("audio");
-                returnButton.setText("Вернуться");
+                returnButton.setText("Вернуться↩");
                 returnButton.setCallbackData("return");
                 row1.add(button1);
                 row2.add(button2);
@@ -250,13 +254,13 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 InlineKeyboardButton button5 = new InlineKeyboardButton();
                 InlineKeyboardButton button6 = new InlineKeyboardButton();
                 InlineKeyboardButton returnButton = new InlineKeyboardButton();
-                urlShops("Ridero", button1, book, row1);
-                urlShops("ЛитРес", button2, book, row2);
-                urlShops("Wildberries", button3, book, row2);
-                urlShops("OZON", button4, book, row2);
-                urlShops("AliExpress", button5, book, row3);
-                urlShops("Amazon", button6, book, row3);
-                returnButton.setText("Вернуться");
+                urlShops("Ridero", "🟠", button1, book, row1);
+                urlShops("ЛитРес", "⚫", button2, book, row2);
+                urlShops("Wildberries", "🟣", button3, book, row2);
+                urlShops("OZON", "🔵", button4, book, row2);
+                urlShops("AliExpress", "🔴", button5, book, row3);
+                urlShops("Amazon", "🟡", button6, book, row3);
+                returnButton.setText("Вернуться↩");
                 returnButton.setCallbackData("return");
                 row4.add(returnButton);
                 rowList.add(row1);
@@ -289,9 +293,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         }
     }
 
-    public void urlShops(String text, InlineKeyboardButton button, Document book, List<InlineKeyboardButton> row) {
-        button.setText(text);
-        button.setUrl(book.getEmbedded(Arrays.asList("Shops", text), String.class));
+    public void urlShops(String shop, String emoji, InlineKeyboardButton button, Document book, List<InlineKeyboardButton> row) {
+        button.setText(shop + emoji);
+        button.setUrl(book.getEmbedded(Arrays.asList("Shops", shop), String.class));
         row.add(button);
     }
 
@@ -301,7 +305,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         createMessage.setChatId(message.getChatId().toString());
         createMessage.setText(text);
         createMessage.enableMarkdownV2(true);
-        if (text.equals("Давайте вместе разберемся, чем я могу помочь"))
+        if (text.equals("Давайте вместе разберемся, чем я могу помочь🤔"))
             createKeyboard(createMessage, update, mongoClient);
         try {
             execute(createMessage);
@@ -393,11 +397,11 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         List<InlineKeyboardButton> row1 = new ArrayList<>();
         List<InlineKeyboardButton> row2_3 = new ArrayList<>();
         List<InlineKeyboardButton> row3_4 = new ArrayList<>();
-        ShopsButton.setText("Книга в магазинах");
+        ShopsButton.setText("Книга в магазинах🛍");
         ShopsButton.setCallbackData("shops");
-        NextButton.setText("Следующая книга");
+        NextButton.setText("Следующая➡");
         NextButton.setCallbackData("next");
-        ExcerptButton.setText("Отрывок из книги");
+        ExcerptButton.setText("Отрывок из книги📄");
         ExcerptButton.setCallbackData("excerpt");
         row1.add(ShopsButton);
         rowList.add(row1);
@@ -412,7 +416,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             }
             rowList.add(row2);
             InlineKeyboardButton PreviousButton = new InlineKeyboardButton();
-            PreviousButton.setText("Предыдущая книга");
+            PreviousButton.setText("⬅Предыдущая");
             PreviousButton.setCallbackData("previous");
             row2_3.add(PreviousButton);
         }
@@ -428,16 +432,16 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         List<KeyboardRow> keyboard = new ArrayList<>();
         KeyboardRow row1 = new KeyboardRow();
         KeyboardRow row2 = new KeyboardRow();
-        row1.add("Книги");
-        row1.add("Аудиокниги");
-        row2.add("Контакты");
-        row2.add("Позвать оператора");
+        row1.add("Книги📚");
+        row1.add("Аудиокниги🔈");
+        row2.add("Контакты📝");
+        row2.add("Позвать оператора👤");
         keyboard.add(row1);
         keyboard.add(row2);
         createKeyboard.setKeyboard(keyboard);
         createKeyboard.setResizeKeyboard(true);
         createKeyboard.setOneTimeKeyboard(true);
-        createKeyboard.setInputFieldPlaceholder("Общение");
+        createKeyboard.setInputFieldPlaceholder("Написать");
         createKeyboard.setSelective(true); //https://core.telegram.org/bots/api#replykeyboardmarkup
         createMessage.setReplyMarkup(createKeyboard);
         createLog(update, mongoClient, "*Клавиатуру нарисовал*", "Bot ", false);
