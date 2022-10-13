@@ -102,11 +102,14 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         } catch (TelegramApiException e) {
                             e.printStackTrace();
                         }
-                    } else if (text.contains("контакты")) {
-                        createMessage(message, "Я @magistrmate родился и вырос в провинциальном городке далеко от столицы\\. " +
-                                "С 18 лет жил в Москве, получил два высших технических образования и продолжаю " +
-                                "работать в той же сфере\\. У меня есть жена, собака и острое желание писать свои " +
-                                "истории для вас\\.✍", update, mongoClient);
+                    } else if (text.contains("о нас") || (text.contains("о вас"))) {
+                        createMessage(message, "Я, [Апасов Даниил](tg://user?id=411435416), родился и вырос в " +
+                                "провинциальном городке далеко от столицы\\. С 18 лет жил в Москве, получил два " +
+                                "высших технических образования и продолжаю работать в той же сфере\\. У меня есть " +
+                                "жена, собака и острое желание писать свои истории для вас\\.✍\nКонтакты:\n" +
+                                "[Instagram](https://www.instagram.com/magistrmate/)\n" +
+                                "[VK](https://vk.com/magistrmate)\n[Twitter](https://twitter.com/Magistrmate)\n" +
+                                "[Facebook](https://www.facebook.com/magistrmate)\nmagistrmate@ya\\.ru" , update, mongoClient);
                     } else {
                         createMessage(message, "Давайте вместе разберемся, чем я могу помочь🤔", update,
                                 mongoClient);
@@ -434,7 +437,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         KeyboardRow row2 = new KeyboardRow();
         row1.add("Книги📚");
         row1.add("Аудиокниги🔈");
-        row2.add("Контакты📝");
+        row2.add("О нас📝");
         row2.add("Позвать оператора👤");
         keyboard.add(row1);
         keyboard.add(row2);
