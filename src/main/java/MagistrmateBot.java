@@ -47,6 +47,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     String messageGuest;
     String messageFrom;
     String textHistory;
+    String name;
+    String username;
+    String SentId;
 
     @Override
     public String getBotUsername() {
@@ -76,6 +79,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         collection.updateOne(query, updates, options);
                     } catch (MongoException me) {
                         System.err.println("Unable" + me);
+                        createMessage(message, "81 строчка кода" + me, update, mongoClient);
                     }
                 } else {
                     String text = message.getText().toLowerCase(Locale.ROOT);
@@ -108,11 +112,10 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         date = calendar.getTime();
                         */
                         assert doc != null;
-                        System.out.println(doc.getString(dateString).length());
                         if (doc.getString(dateString).length() > 4096) {
                             textHistory = doc.getString(dateString).substring(3500);
                         } else textHistory = doc.getString(dateString);
-                        createMessage.setText(textHistory);
+                        createMessage.setText(textHistory + "Имя: " + doc.getString("Name") + " Логин: @" + doc.getString("Username"));
                         createMessage.enableMarkdownV2(false);
                         BotLiveWithId = messageGuest;
                         try {
@@ -319,8 +322,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
 
     private void createMessage(Message message, String text, Update update, MongoClient mongoClient) {
         textLog = text.replaceAll("\\\\", "");
+        if (text.contains("код")) SentId = BotConfig.ID_SUPPORT; else SentId = message.getChatId().toString();
         SendMessage createMessage = SendMessage.builder()
-                .chatId(message.getChatId().toString())
+                .chatId(SentId)
                 .text(text)
                 .parseMode("MarkdownV2").build();
         if (text.equals("Давайте вместе разберемся, чем я могу помочь🤔"))
@@ -482,16 +486,18 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         MongoCollection<Document> collectionLog = databaseLog.getCollection("Log");
         if (keyboard) {
             Id = update.getCallbackQuery().getFrom().getId().toString();
-            Info = "InfoKeyboard";
+            //Info = "InfoKeyboard";
             Answer = update.getCallbackQuery().getMessage().toString();
         } else {
             Id = update.getMessage().getFrom().getId().toString();
             Info = "Info";
             Answer = update.getMessage().toString();
+            name = update.getMessage().getFrom().getFirstName();
+            username = update.getMessage().getFrom().getUserName();
         }
         try {
-            collectionLog.insertOne(new Document().append("_id", Id).append(Info, Answer).append(dateString,
-                    timeString + " " + who + ": " + textLog + "\n"));
+            collectionLog.insertOne(new Document().append("_id", Id).append(Info, Answer).append("Name", name)
+                    .append("Username", username).append(dateString, timeString + " " + who + ": " + textLog + "\n"));
         } catch (MongoException me) {
             Document doc = collectionLog.find(Filters.eq("_id", Id)).first();
             assert doc != null;
@@ -502,6 +508,10 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     "\n"));
             UpdateOptions options = new UpdateOptions().upsert(true);
             collectionLog.updateOne(query, updates, options);
+            Bson updatesName = Updates.combine(Updates.set("Name", name));
+            collectionLog.updateOne(query, updatesName, options);
+            Bson updatesUserName = Updates.combine(Updates.set("Username", username));
+            collectionLog.updateOne(query, updatesUserName, options);
         }
     }
 }
