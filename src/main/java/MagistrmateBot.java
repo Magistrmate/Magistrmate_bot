@@ -25,13 +25,14 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.Instant;
 import java.time.ZoneId;
-import java.util.*;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 
 public class MagistrmateBot extends TelegramLongPollingBot {
     Integer nextBook = 0;
@@ -96,9 +97,10 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         Document doc = collectionLog.find(Filters.eq("_id", Id)).first();
                         SendMessage createMessage = new SendMessage();
                         createMessage.setChatId(BotConfig.ID_SUPPORT);
-                        DateFormat dateFormat = new SimpleDateFormat("dd/MM/yy");
-                        //Date date = new Date();
-                        LocalDate date = LocalDate.now(ZoneId.of("Europe/Moscow"));
+                        Instant instant = Instant.now();
+                        ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, ZoneId.of("Europe/Moscow"));
+                        DateTimeFormatter date = DateTimeFormatter.ofPattern("dd/MM/yy");
+                        String dateString = zdt.format(date);
                         /* tomorrow
                         Calendar calendar = new GregorianCalendar();
                         calendar.setTime(date);
@@ -106,10 +108,10 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         date = calendar.getTime();
                         */
                         assert doc != null;
-                        System.out.println(doc.getString(dateFormat.format(date)).length());
-                        if (doc.getString(dateFormat.format(date)).length() > 4096) {
-                            textHistory = doc.getString(dateFormat.format(date)).substring(3500);
-                        } else textHistory = doc.getString(dateFormat.format(date));
+                        System.out.println(doc.getString(dateString).length());
+                        if (doc.getString(dateString).length() > 4096) {
+                            textHistory = doc.getString(dateString).substring(3500);
+                        } else textHistory = doc.getString(dateString);
                         createMessage.setText(textHistory);
                         createMessage.enableMarkdownV2(false);
                         BotLiveWithId = messageGuest;
@@ -120,7 +122,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         }
                     } else if (text.contains("об авторе") || (text.contains("о вас"))) {
                         createMessage(message, """
-                                        [Апасов Даниил](tg://user?id=411435416), родился и вырос в провинциальном городке далеко от столицы\\. С 18 лет жил в Москве, получил два высших технических образования и продолжил работать в той же сфере\\. У него есть жена, собака и острое желание писать свои истории для вас\\.✍
+                                        [Апасов Даниил](tg://user?id=411435416) родился и вырос в провинциальном городке далеко от столицы\\. С 18 лет жил в Москве, получил два высших технических образования и продолжил работать в той же сфере\\. У него есть жена, собака и острое желание писать свои истории для вас\\.✍
                                         Контакты: 🟦 [VK](vk.com/magistrmate),📷 [Instagram](instagram.com/magistrmate/),🐦 [Twitter](twitter.com/Magistrmate),🧑📖 [Facebook](facebook.com/magistrmate), ✉ magistrmate@ya\\.ru
                                         Бот написан автором книг👾""", update,
                                 mongoClient);
@@ -160,15 +162,14 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 }
                 if (nextBook == collection.countDocuments()) nextBook = 0;
                 Document book = collection.find().skip(nextBook).first();
-                InputMedia photo = new InputMediaPhoto();
                 assert book != null;
-                photo.setMedia(book.getString("cover"));
-                photo.setCaption("*" + book.getString("name") + "*\n" + book.getString("description"));
-                photo.setParseMode(ParseMode.MARKDOWNV2);
-                EditMessageMedia replacePhoto = new EditMessageMedia();
-                replacePhoto.setMedia(photo);
-                replacePhoto.setChatId(backMessage.getChatId().toString());
-                replacePhoto.setMessageId(Integer.valueOf(backMessage.getMessageId().toString()));
+                InputMedia photo = InputMediaPhoto.builder()
+                        .media(book.getString("cover"))
+                        .caption("*" + book.getString("name") + "*\n" + book.getString("description"))
+                        .parseMode("MarkdownV2").build();
+                EditMessageMedia replacePhoto = EditMessageMedia.builder()
+                        .media(photo).chatId(backMessage.getChatId().toString())
+                        .messageId(Integer.valueOf(backMessage.getMessageId().toString())).build();
                 InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
                 nextBook++;
                 createFirstKeyboard(update, inlineKeyboard, collection);
@@ -182,9 +183,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             } else if (backText.equals("excerpt")) {
                 Document book = collection.find().skip(showBook).first();
                 assert book != null;
-                EditMessageReplyMarkup keyboard = new EditMessageReplyMarkup();
-                keyboard.setChatId(backMessage.getChatId().toString());
-                keyboard.setMessageId(Integer.valueOf(backMessage.getMessageId().toString()));
+                EditMessageReplyMarkup keyboard = EditMessageReplyMarkup.builder()
+                        .chatId(backMessage.getChatId().toString())
+                        .messageId(backMessage.getMessageId()).build();
                 InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
                 List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
                 List<InlineKeyboardButton> row1 = new ArrayList<>();
@@ -255,9 +256,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             } else if (update.getCallbackQuery().getData().equals("shops")) {
                 Document book = collection.find().skip(showBook).first();
                 assert book != null;
-                EditMessageReplyMarkup keyboard = new EditMessageReplyMarkup();
-                keyboard.setChatId(backMessage.getChatId().toString());
-                keyboard.setMessageId(Integer.valueOf(backMessage.getMessageId().toString()));
+                EditMessageReplyMarkup keyboard = EditMessageReplyMarkup.builder()
+                        .chatId(backMessage.getChatId().toString())
+                        .messageId(backMessage.getMessageId()).build();
                 InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
                 List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
                 List<InlineKeyboardButton> row1 = new ArrayList<>();
@@ -296,7 +297,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             } else if (backText.equals("return")) {
                 EditMessageReplyMarkup backKeyboard = new EditMessageReplyMarkup();
                 backKeyboard.setChatId(backMessage.getChatId().toString());
-                backKeyboard.setMessageId(Integer.valueOf(backMessage.getMessageId().toString()));
+                backKeyboard.setMessageId(backMessage.getMessageId());
                 InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
                 createFirstKeyboard(update, inlineKeyboard, collection);
                 backKeyboard.setReplyMarkup(inlineKeyboard);
@@ -318,10 +319,10 @@ public class MagistrmateBot extends TelegramLongPollingBot {
 
     private void createMessage(Message message, String text, Update update, MongoClient mongoClient) {
         textLog = text.replaceAll("\\\\", "");
-        SendMessage createMessage = new SendMessage();
-        createMessage.setChatId(message.getChatId().toString());
-        createMessage.setText(text);
-        createMessage.enableMarkdownV2(true);
+        SendMessage createMessage = SendMessage.builder()
+                .chatId(message.getChatId().toString())
+                .text(text)
+                .parseMode("MarkdownV2").build();
         if (text.equals("Давайте вместе разберемся, чем я могу помочь🤔"))
             createKeyboard(createMessage, update, mongoClient);
         try {
@@ -337,15 +338,15 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         List<InputMedia> media = new ArrayList<>();
         List<Document> books = collection.find().skip(1).into(new ArrayList<>());
         for (Document book : books) {
-            InputMedia photo = new InputMediaPhoto();
-            photo.setParseMode(ParseMode.MARKDOWNV2);
-            photo.setMedia(book.getString("cover"));
-            photo.setCaption("*" + book.getString("name") + "*\n" + book.getString("description"));
+            InputMedia photo = InputMediaPhoto.builder()
+                    .parseMode("MarkdownV2")
+                    .media(book.getString("cover"))
+                    .caption("*" + book.getString("name") + "*\n" + book.getString("description")).build();
             media.add(photo);
         }
-        SendMediaGroup mediaGroup = new SendMediaGroup();
-        mediaGroup.setChatId(message.getChatId().toString());
-        mediaGroup.setMedias(media);
+        SendMediaGroup mediaGroup = SendMediaGroup.builder()
+                .chatId(message.getChatId().toString())
+                .medias(media).build();
         try {
             execute(mediaGroup);
             createLog(update, mongoClient, "*Показал несколько обложек*", "Bot ", false);
@@ -458,22 +459,19 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         createKeyboard.setKeyboard(keyboard);
         createKeyboard.setResizeKeyboard(true);
         createKeyboard.setOneTimeKeyboard(true);
-        createKeyboard.setInputFieldPlaceholder("Пиши, я слушаю");
+        createKeyboard.setInputFieldPlaceholder("Пишите, я читаю");
         createKeyboard.setSelective(true); //https://core.telegram.org/bots/api#replykeyboardmarkup
         createMessage.setReplyMarkup(createKeyboard);
         createLog(update, mongoClient, "*Клавиатуру нарисовал*", "Bot ", false);
     }
 
     public void createLog(Update update, MongoClient mongoClient, String textLog, String who, Boolean keyboard) {
-        DateFormat dateFormat = new SimpleDateFormat("dd/MM/yy");
-        DateFormat dateFormatLog = new SimpleDateFormat("HH:mm");
-        Date date = new Date();
-        //System.out.println(date1);
-        //TimeZone.setDefault(TimeZone.getTimeZone("Europe/Moscow"));
-        //Date date2 = new Date();
-        //System.out.println(date2);
-        //LocalDateTime date = LocalDateTime.now(ZoneId.of("Europe/Moscow"));
-        System.out.println(dateFormat.format(date.toString()));
+        Instant instant = Instant.now();
+        ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, ZoneId.of("Europe/Moscow"));
+        DateTimeFormatter date = DateTimeFormatter.ofPattern("dd/MM/yy");
+        String dateString = zdt.format(date);
+        DateTimeFormatter time = DateTimeFormatter.ofPattern("HH:mm");
+        String timeString = zdt.format(time);
         /* tomorrow
         Calendar calendar = new GregorianCalendar();
         calendar.setTime(date);
@@ -492,17 +490,16 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             Answer = update.getMessage().toString();
         }
         try {
-            collectionLog.insertOne(
-                    new Document().append("_id", Id).append(Info, Answer).append(dateFormat.format(date),
-                            dateFormatLog.format(date) + " " + who + ": " + textLog + "\n"));
+            collectionLog.insertOne(new Document().append("_id", Id).append(Info, Answer).append(dateString,
+                    timeString + " " + who + ": " + textLog + "\n"));
         } catch (MongoException me) {
             Document doc = collectionLog.find(Filters.eq("_id", Id)).first();
             assert doc != null;
             Document query = new Document().append("_id", Id);
-            if (doc.getString(dateFormat.format(date)) == null) Script = "";
-            else Script = doc.getString(dateFormat.format(date));
-            Bson updates = Updates.combine(Updates.set(dateFormat.format(date), Script + dateFormatLog.format(date) +
-                    " " + who + ": " + textLog + "\n"));
+            if (doc.getString(dateString) == null) Script = "";
+            else Script = doc.getString(dateString);
+            Bson updates = Updates.combine(Updates.set(dateString, Script + timeString + " " + who + ": " + textLog +
+                    "\n"));
             UpdateOptions options = new UpdateOptions().upsert(true);
             collectionLog.updateOne(query, updates, options);
         }
