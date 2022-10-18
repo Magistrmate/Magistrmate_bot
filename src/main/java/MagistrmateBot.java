@@ -134,12 +134,12 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             } else {
                 if (messageFrom.equals(BotConfig.ID_SUPPORT) && message.getText().contains("До свидания"))
                     BotLiveWithId = "";
-                SendMessage createMessage = new SendMessage();
                 if (messageFrom.equals(BotConfig.ID_SUPPORT)) {
                     messageFrom = messageGuest;
                 } else messageFrom = BotConfig.ID_SUPPORT;
-                createMessage.setChatId(messageFrom);
-                createMessage.setText(message.getText());
+                SendMessage createMessage = SendMessage.builder()
+                        .chatId(messageFrom)
+                        .text(message.getText()).build();
                 try {
                     execute(createMessage);
                 } catch (TelegramApiException e) {
