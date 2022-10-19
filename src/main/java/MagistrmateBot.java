@@ -50,6 +50,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     String name;
     String username;
     String SentId;
+    Boolean notification = false;
 
     @Override
     public String getBotUsername() {
@@ -69,6 +70,11 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         Message message = update.getMessage();
         if (update.hasMessage()) {
             messageFrom = update.getMessage().getFrom().getId().toString();
+            if (!notification) {
+                createMessage(message, "Со мной общается " + message.getFrom().getFirstName() + " " +
+                        message.getFrom().getUserName(), update, mongoClient);
+                notification = true;
+            }
             if (!BotLiveWithId.equals(messageGuest)) {
                 messageGuest = update.getMessage().getFrom().getId().toString();
                 if (message.hasAudio() || message.hasDocument()) {
@@ -78,8 +84,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     try {
                         collection.updateOne(query, updates, options);
                     } catch (MongoException me) {
-                        System.err.println("Unable" + me);
-                        createMessage(message, "81 строчка кода" + me, update, mongoClient);
+                        createMessage(message, "81 строчка кода\n" + me, update, mongoClient);
                     }
                 } else {
                     String text = message.getText().toLowerCase(Locale.ROOT);
@@ -322,7 +327,8 @@ public class MagistrmateBot extends TelegramLongPollingBot {
 
     private void createMessage(Message message, String text, Update update, MongoClient mongoClient) {
         textLog = text.replaceAll("\\\\", "");
-        if (text.contains("код")) SentId = BotConfig.ID_SUPPORT; else SentId = message.getChatId().toString();
+        if (text.contains("строчка кода") || text.contains("Со мной общается")) SentId = BotConfig.ID_SUPPORT;
+        else SentId = message.getChatId().toString();
         SendMessage createMessage = SendMessage.builder()
                 .chatId(SentId)
                 .text(text)
@@ -486,7 +492,6 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         MongoCollection<Document> collectionLog = databaseLog.getCollection("Log");
         if (keyboard) {
             Id = update.getCallbackQuery().getFrom().getId().toString();
-            //Info = "InfoKeyboard";
             Answer = update.getCallbackQuery().getMessage().toString();
         } else {
             Id = update.getMessage().getFrom().getId().toString();
