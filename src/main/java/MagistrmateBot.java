@@ -71,8 +71,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         if (update.hasMessage()) {
             messageFrom = update.getMessage().getFrom().getId().toString();
             if (!notification) {
-                createMessage(message, "Со мной общается " + message.getFrom().getFirstName() + " " +
-                        message.getFrom().getUserName(), update, mongoClient);
+                createMessage(message, "Со мной общается @" + message.getFrom().getUserName(), update, mongoClient);
                 notification = true;
             }
             if (!BotLiveWithId.equals(messageGuest)) {
