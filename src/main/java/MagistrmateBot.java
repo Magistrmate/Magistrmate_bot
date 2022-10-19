@@ -50,7 +50,8 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     String name;
     String username;
     String SentId;
-    Boolean notification = false;
+    Boolean notification = true;
+    String notificationId = "";
 
     @Override
     public String getBotUsername() {
@@ -70,9 +71,13 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         Message message = update.getMessage();
         if (update.hasMessage()) {
             messageFrom = update.getMessage().getFrom().getId().toString();
-            if (!notification) {
+            if (notification && !notificationId.equals(messageFrom)) {
                 createMessage(message, "Со мной общается @" + message.getFrom().getUserName(), update, mongoClient);
+                notification = false;
+                notificationId = "";
+            } else {
                 notification = true;
+                notificationId = messageFrom;
             }
             if (!BotLiveWithId.equals(messageGuest)) {
                 messageGuest = update.getMessage().getFrom().getId().toString();
