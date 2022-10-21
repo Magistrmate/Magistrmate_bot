@@ -43,15 +43,14 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     String Info;
     String Answer;
     String Script;
-    String BotLiveWithId = "";
-    String messageGuest;
-    String messageFrom;
+    String userIdTalkSupport = "";
     String textHistory;
     String name;
     String username;
-    String SentId;
     Boolean notification = true;
     String notificationId = "";
+    String userId;
+    String text;
 
     @Override
     public String getBotUsername() {
@@ -70,93 +69,22 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         MongoCollection<Document> collection = database.getCollection("MagistrmateCollection");
         Message message = update.getMessage();
         if (update.hasMessage()) {
-            messageFrom = update.getMessage().getFrom().getId().toString();
-            if (notification && !notificationId.equals(messageFrom)) {
-                createMessage(message, "Со мной общается @" + message.getFrom().getUserName(), update, mongoClient);
+            userId = message.getFrom().getId().toString();
+            username = message.getFrom().getUserName();
+            text = message.getText();
+            if (userId.equals(BotConfig.USER_SUPPORT)) {
+                createMessage(message.getText(), update, mongoClient, userIdTalkSupport);
+                if (text.contains("До свидания")) userIdTalkSupport = "";
+            } else if (userId.equals(userIdTalkSupport))
+                createMessage(message.getText(), update, mongoClient, BotConfig.USER_SUPPORT);
+            else createTalk(message, update, mongoClient, collection);
+            if (notification && !notificationId.equals(userId)) {
+                createMessage("Со мной общается @" + username, update, mongoClient, BotConfig.USER_SUPPORT);
                 notification = false;
                 notificationId = "";
             } else {
                 notification = true;
-                notificationId = messageFrom;
-            }
-            if (!BotLiveWithId.equals(messageGuest)) {
-                messageGuest = update.getMessage().getFrom().getId().toString();
-                if (message.hasAudio() || message.hasDocument()) {
-                    Document query = new Document().append("_id", message.getCaption());
-                    Bson updates = Updates.combine(Updates.set("audio", update.getMessage().getAudio().getFileId()));
-                    UpdateOptions options = new UpdateOptions().upsert(true);
-                    try {
-                        collection.updateOne(query, updates, options);
-                    } catch (MongoException me) {
-                        createMessage(message, "81 строчка кода\n" + me, update, mongoClient);
-                    }
-                } else {
-                    String text = message.getText().toLowerCase(Locale.ROOT);
-                    createLog(update, mongoClient, text, "User", false);
-                    if (text.equals("/start")) {
-                        createMessage(message, "Добро пожаловать " + message.getFrom().getFirstName() + "\\!👋\n" +
-                                "Мы можем перейти сразу к книгам или пообщаться\\. Я пока в процессе познания вашего " +
-                                "мира, поэтому пишите и если не пойму, то выдам вам подсказки\\.", update, mongoClient);
-                    } else if (text.contains("прив") || text.contains("хай")) {
-                        createMessage(message, "Здравствуйте🤖", update, mongoClient);
-                    } else if (text.toLowerCase(Locale.ROOT).contains("книг") ||
-                            text.toLowerCase(Locale.ROOT).contains("книж")) {
-                        createFewCovers(message, collection, update, mongoClient);
-                        createCover(update, message, collection, mongoClient);
-                    } else if (text.contains("оператор")) {
-                        createMessage(message, "Сейчас позову, минутку🗣", update, mongoClient);
-                        MongoDatabase databaseLog = mongoClient.getDatabase("Log");
-                        MongoCollection<Document> collectionLog = databaseLog.getCollection("Log");
-                        Document doc = collectionLog.find(Filters.eq("_id", Id)).first();
-                        SendMessage createMessage = new SendMessage();
-                        createMessage.setChatId(BotConfig.ID_SUPPORT);
-                        Instant instant = Instant.now();
-                        ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, ZoneId.of("Europe/Moscow"));
-                        DateTimeFormatter date = DateTimeFormatter.ofPattern("dd/MM/yy");
-                        String dateString = zdt.format(date);
-                        /* tomorrow
-                        Calendar calendar = new GregorianCalendar();
-                        calendar.setTime(date);
-                        calendar.add(Calendar.DATE, 1);
-                        date = calendar.getTime();
-                        */
-                        assert doc != null;
-                        if (doc.getString(dateString).length() > 4096) {
-                            textHistory = doc.getString(dateString).substring(3500);
-                        } else textHistory = doc.getString(dateString);
-                        createMessage.setText(textHistory + "Имя: " + doc.getString("Name") + " Логин: @" + doc.getString("Username"));
-                        createMessage.enableMarkdownV2(false);
-                        BotLiveWithId = messageGuest;
-                        try {
-                            execute(createMessage);
-                        } catch (TelegramApiException e) {
-                            e.printStackTrace();
-                        }
-                    } else if (text.contains("об авторе") || (text.contains("о вас"))) {
-                        createMessage(message, """
-                                        [Апасов Даниил](tg://user?id=411435416) родился и вырос в провинциальном городке далеко от столицы\\. С 18 лет жил в Москве, получил два высших технических образования и продолжил работать в той же сфере\\. У него есть жена, собака и острое желание писать свои истории для вас\\.✍
-                                        Контакты: 🟦 [VK](vk.com/magistrmate),📷 [Instagram](instagram.com/magistrmate/),🐦 [Twitter](twitter.com/Magistrmate),🧑📖 [Facebook](facebook.com/magistrmate), ✉ magistrmate@ya\\.ru
-                                        Бот написан автором книг👾""", update,
-                                mongoClient);
-                    } else {
-                        createMessage(message, "Давайте вместе разберемся, чем я могу помочь🤔", update,
-                                mongoClient);
-                    }
-                }
-            } else {
-                if (messageFrom.equals(BotConfig.ID_SUPPORT) && message.getText().contains("До свидания"))
-                    BotLiveWithId = "";
-                if (messageFrom.equals(BotConfig.ID_SUPPORT)) {
-                    messageFrom = messageGuest;
-                } else messageFrom = BotConfig.ID_SUPPORT;
-                SendMessage createMessage = SendMessage.builder()
-                        .chatId(messageFrom)
-                        .text(message.getText()).build();
-                try {
-                    execute(createMessage);
-                } catch (TelegramApiException e) {
-                    e.printStackTrace();
-                }
+                notificationId = userId;
             }
         }
         if (update.hasCallbackQuery()) {
@@ -329,12 +257,10 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         row.add(button);
     }
 
-    private void createMessage(Message message, String text, Update update, MongoClient mongoClient) {
+    private void createMessage(String text, Update update, MongoClient mongoClient, String sentId) {
         textLog = text.replaceAll("\\\\", "");
-        if (text.contains("строчка кода") || text.contains("Со мной общается")) SentId = BotConfig.ID_SUPPORT;
-        else SentId = message.getChatId().toString();
         SendMessage createMessage = SendMessage.builder()
-                .chatId(SentId)
+                .chatId(sentId)
                 .text(text)
                 .parseMode("MarkdownV2").build();
         if (text.equals("Давайте вместе разберемся, чем я могу помочь🤔"))
@@ -521,6 +447,79 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             collectionLog.updateOne(query, updatesName, options);
             Bson updatesUserName = Updates.combine(Updates.set("Username", username));
             collectionLog.updateOne(query, updatesUserName, options);
+        }
+    }
+
+    public void createHistory(MongoClient mongoClient) {
+        MongoDatabase databaseLog = mongoClient.getDatabase("Log");
+        MongoCollection<Document> collectionLog = databaseLog.getCollection("Log");
+        Document doc = collectionLog.find(Filters.eq("_id", Id)).first();
+        SendMessage createMessage = new SendMessage();
+        createMessage.setChatId(BotConfig.USER_SUPPORT);
+        Instant instant = Instant.now();
+        ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, ZoneId.of("Europe/Moscow"));
+        DateTimeFormatter date = DateTimeFormatter.ofPattern("dd/MM/yy");
+        String dateString = zdt.format(date);
+                            /* tomorrow
+                            Calendar calendar = new GregorianCalendar();
+                            calendar.setTime(date);
+                            calendar.add(Calendar.DATE, 1);
+                            date = calendar.getTime();
+                            */
+        assert doc != null;
+        if (doc.getString(dateString).length() > 4096) {
+            textHistory = doc.getString(dateString).substring(3500);
+        } else textHistory = doc.getString(dateString);
+        createMessage.setText(textHistory + "Имя: " + doc.getString("Name") + " Логин: @" + doc.getString("Username"));
+        createMessage.enableMarkdownV2(false);
+        try {
+            execute(createMessage);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void createTalk(Message message, Update update, MongoClient mongoClient, MongoCollection<Document> collection) {
+        if (message.hasAudio() || message.hasDocument()) {
+            Document query = new Document().append("_id", message.getCaption());
+            Bson updates = Updates.combine(Updates.set("audio", update.getMessage().getAudio().getFileId()));
+            UpdateOptions options = new UpdateOptions().upsert(true);
+            try {
+                collection.updateOne(query, updates, options);
+            } catch (MongoException me) {
+                createMessage("81 строчка кода\n" + me, update, mongoClient, BotConfig.USER_SUPPORT);
+            }
+        } else {
+            String text = message.getText().toLowerCase(Locale.ROOT);
+            createLog(update, mongoClient, text, "User", false);
+            if (text.equals("/start")) {
+                createMessage("Добро пожаловать " + message.getFrom().getFirstName() + "\\!👋\n" +
+                        "Мы можем перейти сразу к книгам или пообщаться\\. Я пока в процессе познания вашего " +
+                        "мира, поэтому пишите и если не пойму, то выдам вам подсказки\\.", update, mongoClient, userId);
+            } else if (text.contains("прив") || text.contains("хай")) {
+                createMessage("Здравствуйте🤖", update, mongoClient, userId);
+            } else if (text.toLowerCase(Locale.ROOT).contains("книг") ||
+                    text.toLowerCase(Locale.ROOT).contains("книж")) {
+                createFewCovers(message, collection, update, mongoClient);
+                createCover(update, message, collection, mongoClient);
+            } else if (text.contains("оператор")) {
+                //if (BotLiveWithId.equals("")) {
+                createMessage("Сейчас позову, минутку🗣", update, mongoClient, userId);
+                createHistory(mongoClient);
+                userIdTalkSupport = userId;
+                //supportTalkUser = true;
+                /*} else {
+                    createMessage(message, "Сейчас оператор общается с другим читателем. Он обязательно вам ответит чуть позже", update, mongoClient);
+                    createMessage(message, "Тебя ждут отвечай пикадор", update, mongoClient);
+                }*/
+            } else if (text.contains("об авторе") || (text.contains("о вас"))) {
+                createMessage("""
+                        [Апасов Даниил](tg://user?id=411435416) родился и вырос в провинциальном городке далеко от столицы\\. С 18 лет жил в Москве, получил два высших технических образования и продолжил работать в той же сфере\\. У него есть жена, собака и острое желание писать свои истории для вас\\.✍
+                        Контакты: 🟦 [VK](vk.com/magistrmate),📷 [Instagram](instagram.com/magistrmate/),🐦 [Twitter](twitter.com/Magistrmate),🧑📖 [Facebook](facebook.com/magistrmate), ✉ magistrmate@ya\\.ru
+                        Бот написан автором книг👾""", update, mongoClient, userId);
+            } else {
+                createMessage("Давайте вместе разберемся, чем я могу помочь🤔", update, mongoClient, userId);
+            }
         }
     }
 }

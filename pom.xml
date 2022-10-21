@@ -25,6 +25,11 @@
         <artifactId>telegrambots</artifactId>
         <version>6.1.0</version>
     </dependency>
+    <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-nop</artifactId>
+        <version>1.7.2</version>
+    </dependency>
     <!-- https://mvnrepository.com/artifact/org.telegram/telegrambotsextensions -->
     <dependency>
         <groupId>org.telegram</groupId>

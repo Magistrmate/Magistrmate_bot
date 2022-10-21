@@ -3,4 +3,6 @@ Main.class
 MagistrmateBot.class
 CreateInDB.class
 BotConfig.class
+CreateInLogDB.class
 Read.class
+SendDocument.class

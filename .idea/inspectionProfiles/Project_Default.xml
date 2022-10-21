@@ -8,6 +8,7 @@
       <option name="excludeList">
         <list>
           <option value="org.slf4j:slf4j-api" />
+          <option value="org.slf4j:slf4j-nop" />
         </list>
       </option>
     </inspection_tool>
