@@ -44,6 +44,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     String Answer;
     String Script;
     String userIdTalkSupport = "";
+    String userIdTalkSupportWait;
     String textHistory;
     String name;
     String username;
@@ -74,7 +75,14 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             text = message.getText();
             if (userId.equals(BotConfig.USER_SUPPORT)) {
                 createMessage(message.getText(), update, mongoClient, userIdTalkSupport);
-                if (text.contains("До свидания")) userIdTalkSupport = "";
+                if (text.contains("До свидания")) {
+                    if (userIdTalkSupportWait.equals("")) userIdTalkSupport = "";
+                    else {
+                        userIdTalkSupport = userIdTalkSupportWait;
+                        createMessage("Оператор сейчас вам ответит", update, mongoClient, userIdTalkSupportWait);
+                        createHistory(mongoClient, userIdTalkSupport);
+                    }
+                }
             } else if (userId.equals(userIdTalkSupport))
                 createMessage(message.getText(), update, mongoClient, BotConfig.USER_SUPPORT);
             else createTalk(message, update, mongoClient, collection);
@@ -450,10 +458,10 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         }
     }
 
-    public void createHistory(MongoClient mongoClient) {
+    public void createHistory(MongoClient mongoClient, String whoId) {
         MongoDatabase databaseLog = mongoClient.getDatabase("Log");
         MongoCollection<Document> collectionLog = databaseLog.getCollection("Log");
-        Document doc = collectionLog.find(Filters.eq("_id", Id)).first();
+        Document doc = collectionLog.find(Filters.eq("_id", whoId)).first();
         SendMessage createMessage = new SendMessage();
         createMessage.setChatId(BotConfig.USER_SUPPORT);
         Instant instant = Instant.now();
@@ -498,20 +506,19 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         "мира, поэтому пишите и если не пойму, то выдам вам подсказки\\.", update, mongoClient, userId);
             } else if (text.contains("прив") || text.contains("хай")) {
                 createMessage("Здравствуйте🤖", update, mongoClient, userId);
-            } else if (text.toLowerCase(Locale.ROOT).contains("книг") ||
-                    text.toLowerCase(Locale.ROOT).contains("книж")) {
+            } else if (text.contains("книг") || text.contains("книж")) {
                 createFewCovers(message, collection, update, mongoClient);
                 createCover(update, message, collection, mongoClient);
             } else if (text.contains("оператор")) {
-                //if (BotLiveWithId.equals("")) {
-                createMessage("Сейчас позову, минутку🗣", update, mongoClient, userId);
-                createHistory(mongoClient);
-                userIdTalkSupport = userId;
-                //supportTalkUser = true;
-                /*} else {
-                    createMessage(message, "Сейчас оператор общается с другим читателем. Он обязательно вам ответит чуть позже", update, mongoClient);
-                    createMessage(message, "Тебя ждут отвечай пикадор", update, mongoClient);
-                }*/
+                if (userIdTalkSupport.equals("")) {
+                    createMessage("Сейчас позову, минутку🗣", update, mongoClient, userId);
+                    createHistory(mongoClient, userId);
+                    userIdTalkSupport = userId;
+                } else {
+                    createMessage("Оператор уже с кем\\-то балакает, но обязательно вам ответит позже", update, mongoClient, userId);
+                    createMessage("Ало, там очередь уже\\!", update, mongoClient, BotConfig.USER_SUPPORT);
+                    userIdTalkSupportWait = userId;
+                }
             } else if (text.contains("об авторе") || (text.contains("о вас"))) {
                 createMessage("""
                         [Апасов Даниил](tg://user?id=411435416) родился и вырос в провинциальном городке далеко от столицы\\. С 18 лет жил в Москве, получил два высших технических образования и продолжил работать в той же сфере\\. У него есть жена, собака и острое желание писать свои истории для вас\\.✍
