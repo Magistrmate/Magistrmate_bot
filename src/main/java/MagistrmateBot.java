@@ -44,7 +44,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     String Answer;
     String Script;
     String userIdTalkSupport = "";
-    String userIdTalkSupportWait;
+    String userIdTalkSupportWait = "";
     String textHistory;
     String name;
     String username;
@@ -84,15 +84,17 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     }
                 }
             } else if (userId.equals(userIdTalkSupport))
-                createMessage(message.getText(), update, mongoClient, BotConfig.USER_SUPPORT);
+                createMessage(text, update, mongoClient, BotConfig.USER_SUPPORT);
             else createTalk(message, update, mongoClient, collection);
-            if (notification && !notificationId.equals(userId)) {
-                createMessage("Со мной общается @" + username, update, mongoClient, BotConfig.USER_SUPPORT);
-                notification = false;
-                notificationId = "";
-            } else {
-                notification = true;
-                notificationId = userId;
+            if (!userId.equals(BotConfig.USER_SUPPORT) && userIdTalkSupport.equals("")) {
+                if (notification && !userId.equals(notificationId)) {
+                    createMessage("Со мной общается @" + username, update, mongoClient, BotConfig.USER_SUPPORT);
+                    notification = false;
+                    notificationId = "";
+                } else {
+                    notification = true;
+                    notificationId = userId;
+                }
             }
         }
         if (update.hasCallbackQuery()) {
@@ -468,15 +470,14 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, ZoneId.of("Europe/Moscow"));
         DateTimeFormatter date = DateTimeFormatter.ofPattern("dd/MM/yy");
         String dateString = zdt.format(date);
-                            /* tomorrow
-                            Calendar calendar = new GregorianCalendar();
-                            calendar.setTime(date);
-                            calendar.add(Calendar.DATE, 1);
-                            date = calendar.getTime();
-                            */
+        /* tomorrow
+        Calendar calendar = new GregorianCalendar();
+        calendar.setTime(date);
+        calendar.add(Calendar.DATE, 1);
+        date = calendar.getTime();*/
         assert doc != null;
         if (doc.getString(dateString).length() > 4096) {
-            textHistory = doc.getString(dateString).substring(3500);
+            textHistory = "...\n" + doc.getString(dateString).substring(3500);
         } else textHistory = doc.getString(dateString);
         createMessage.setText(textHistory + "Имя: " + doc.getString("Name") + " Логин: @" + doc.getString("Username"));
         createMessage.enableMarkdownV2(false);
@@ -504,7 +505,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 createMessage("Добро пожаловать " + message.getFrom().getFirstName() + "\\!👋\n" +
                         "Мы можем перейти сразу к книгам или пообщаться\\. Я пока в процессе познания вашего " +
                         "мира, поэтому пишите и если не пойму, то выдам вам подсказки\\.", update, mongoClient, userId);
-            } else if (text.contains("прив") || text.contains("хай")) {
+            } else if (text.contains("прив") || text.contains("хай") || text.contains("здравствуй")) {
                 createMessage("Здравствуйте🤖", update, mongoClient, userId);
             } else if (text.contains("книг") || text.contains("книж")) {
                 createFewCovers(message, collection, update, mongoClient);
@@ -515,7 +516,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     createHistory(mongoClient, userId);
                     userIdTalkSupport = userId;
                 } else {
-                    createMessage("Оператор уже с кем\\-то балакает, но обязательно вам ответит позже", update, mongoClient, userId);
+                    createMessage("Оператор уже кому\\-то помогает и обязательно вам ответит позже⏳", update, mongoClient, userId);
                     createMessage("Ало, там очередь уже\\!", update, mongoClient, BotConfig.USER_SUPPORT);
                     userIdTalkSupportWait = userId;
                 }
