@@ -76,8 +76,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             if (userId.equals(BotConfig.USER_SUPPORT)) {
                 createMessage(message.getText(), update, mongoClient, userIdTalkSupport);
                 if (text.contains("До свидания")) {
-                    if (userIdTalkSupportWait.equals("")) userIdTalkSupport = "";
-                    else {
+                    if (userIdTalkSupportWait.equals("") || userIdTalkSupport.equals(userIdTalkSupportWait)) {
+                        userIdTalkSupport = "";
+                    } else {
                         userIdTalkSupport = userIdTalkSupportWait;
                         createMessage("Оператор сейчас вам ответит", update, mongoClient, userIdTalkSupportWait);
                         createHistory(mongoClient, userIdTalkSupport);
