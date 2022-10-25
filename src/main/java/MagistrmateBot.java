@@ -72,6 +72,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         if (update.hasMessage()) {
             userId = message.getFrom().getId().toString();
             username = message.getFrom().getUserName();
+            name = message.getFrom().getFirstName();
             text = message.getText();
             if (userId.equals(BotConfig.USER_SUPPORT)) {
                 createMessage(message.getText(), update, mongoClient, userIdTalkSupport);
@@ -87,9 +88,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             } else if (userId.equals(userIdTalkSupport))
                 createMessage(text, update, mongoClient, BotConfig.USER_SUPPORT);
             else createTalk(message, update, mongoClient, collection);
-            if (!userId.equals(BotConfig.USER_SUPPORT) && userIdTalkSupport.equals("")) {
+            if (!userId.equals(BotConfig.USER_SUPPORT) && userIdTalkSupport.equals("") && !userId.equals(BotConfig.USER_ME)) {
                 if (notification && !userId.equals(notificationId)) {
-                    createMessage("Со мной общается @" + username, update, mongoClient, BotConfig.USER_SUPPORT);
+                    createMessage("Со мной общается @" + username + "(" + name + ")", update, mongoClient, BotConfig.USER_SUPPORT);
                     notification = false;
                     notificationId = "";
                 } else {
@@ -129,7 +130,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     execute(replacePhoto);
                     createLog(update, mongoClient, "*Перелистнул книгу*", "Bot ", true);
                 } catch (TelegramApiException e) {
-                    e.printStackTrace();
+                    createMessage("Смена обложки\n" + e, update, mongoClient, BotConfig.USER_SUPPORT);
                 }
             } else if (backText.equals("excerpt")) {
                 Document book = collection.find().skip(showBook).first();
@@ -178,7 +179,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     execute(keyboard);
                     createLog(update, mongoClient, "*Поменял клавиатуру на отрывки*", "Bot ", true);
                 } catch (TelegramApiException e) {
-                    e.printStackTrace();
+                    createMessage("Показал отрывки\n" + e, update, mongoClient, BotConfig.USER_SUPPORT);
                 }
             } else if (update.getCallbackQuery().getData().equals("epub")) {
                 createDocument(backMessage, collection, update.getCallbackQuery().getData(), update, mongoClient,
@@ -243,7 +244,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     createLog(update, mongoClient, "*Отобразил клавиатуру " + backText + "*", "Bot ",
                             true);
                 } catch (TelegramApiException e) {
-                    e.printStackTrace();
+                    createMessage("Показал магазины\n" + e, update, mongoClient, BotConfig.USER_SUPPORT);
                 }
             } else if (backText.equals("return")) {
                 EditMessageReplyMarkup backKeyboard = new EditMessageReplyMarkup();
@@ -256,7 +257,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     execute(backKeyboard);
                     createLog(update, mongoClient, "*Вернул старую клавиатуру*", "Bot ", true);
                 } catch (TelegramApiException e) {
-                    e.printStackTrace();
+                    createMessage("Нажали возврат\n" + e, update, mongoClient, BotConfig.USER_SUPPORT);
                 }
             }
         }
@@ -278,7 +279,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             createKeyboard(createMessage, update, mongoClient);
         try {
             execute(createMessage);
-            createLog(update, mongoClient, textLog, "Bot ", false);
+            if (!text.equals("Со мной общается @")) createLog(update, mongoClient, textLog, "Bot ", false);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
@@ -302,7 +303,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             execute(mediaGroup);
             createLog(update, mongoClient, "*Показал несколько обложек*", "Bot ", false);
         } catch (TelegramApiException e) {
-            e.printStackTrace();
+            createMessage("Показал несколько обложек\n" + e, update, mongoClient, BotConfig.USER_SUPPORT);
         }
     }
 
@@ -323,7 +324,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             execute(photo);
             createLog(update, mongoClient, "*Показал обложку с кнопками*", "Bot ", false);
         } catch (TelegramApiException e) {
-            e.printStackTrace();
+            createMessage("Обложка с кнопками\n" + e, update, mongoClient, BotConfig.USER_SUPPORT);
         }
     }
 
@@ -338,7 +339,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             execute(document);
             createLog(update, mongoClient, "*Прислал документ " + backText + "*", "Bot ", true);
         } catch (TelegramApiException e) {
-            e.printStackTrace();
+            createMessage("Документ прислал\n" + e, update, mongoClient, BotConfig.USER_SUPPORT);
         }
     }
 
@@ -353,7 +354,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             execute(audio);
             createLog(update, mongoClient, "*Прислал аудио " + backText + "*", "Bot ", true);
         } catch (TelegramApiException e) {
-            e.printStackTrace();
+            createMessage("Аудио прислал\n" + e, update, mongoClient, BotConfig.USER_SUPPORT);
         }
     }
 
@@ -497,7 +498,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             try {
                 collection.updateOne(query, updates, options);
             } catch (MongoException me) {
-                createMessage("81 строчка кода\n" + me, update, mongoClient, BotConfig.USER_SUPPORT);
+                createMessage("Подключение к базе\n" + me, update, mongoClient, BotConfig.USER_SUPPORT);
             }
         } else {
             String text = message.getText().toLowerCase(Locale.ROOT);
