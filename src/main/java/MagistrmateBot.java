@@ -9,7 +9,6 @@ import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.*;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageMedia;
@@ -138,33 +137,33 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 Document book = collection.find().skip(showBook).first();
                 assert book != null;
                 EditMessageReplyMarkup keyboard = EditMessageReplyMarkup.builder()
-                        .chatId(backMessage.getChatId().toString())
-                        .messageId(backMessage.getMessageId()).build();
+                        .chatId(chatId)
+                        .messageId(messageId).build();
                 InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
                 List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
                 List<InlineKeyboardButton> row1 = new ArrayList<>();
                 List<InlineKeyboardButton> row2 = new ArrayList<>();
                 List<InlineKeyboardButton> row3 = new ArrayList<>();
                 List<InlineKeyboardButton> row4 = new ArrayList<>();
-                InlineKeyboardButton button1 = new InlineKeyboardButton();
-                InlineKeyboardButton button2 = new InlineKeyboardButton();
-                InlineKeyboardButton button3 = new InlineKeyboardButton();
-                InlineKeyboardButton button4 = new InlineKeyboardButton();
-                InlineKeyboardButton button5 = new InlineKeyboardButton();
-                InlineKeyboardButton returnButton = new InlineKeyboardButton();
-                button1.setText("🌍 Online");
-                button1.setCallbackData("online");
-                button1.setUrl(book.getString("excerpt"));
-                button2.setText("📘 EPUB");
-                button2.setCallbackData("epub");
-                button3.setText("📙 FB2");
-                button3.setCallbackData("fb-two");
-                button4.setText("📕 PDF");
-                button4.setCallbackData("pdf");
-                button5.setText("🎧 Аудио");
-                button5.setCallbackData("audio");
-                returnButton.setText("↩ Вернуться");
-                returnButton.setCallbackData("return");
+                InlineKeyboardButton button1 = InlineKeyboardButton.builder()
+                        .text("🌍 Online")
+                        .callbackData("online")
+                        .url(book.getString("excerpt")).build();
+                InlineKeyboardButton button2 = InlineKeyboardButton.builder()
+                        .text("📘 EPUB")
+                        .callbackData("epub").build();
+                InlineKeyboardButton button3 = InlineKeyboardButton.builder()
+                        .text("📙 FB2")
+                        .callbackData("fb-two").build();
+                InlineKeyboardButton button4 = InlineKeyboardButton.builder()
+                        .text("📕 PDF")
+                        .callbackData("pdf").build();
+                InlineKeyboardButton button5 = InlineKeyboardButton.builder()
+                        .text("🎧 Аудио")
+                        .callbackData("audio").build();
+                InlineKeyboardButton returnButton = InlineKeyboardButton.builder()
+                        .text("↩ Вернуться")
+                        .callbackData("return").build();
                 row1.add(button1);
                 row2.add(button2);
                 row2.add(button3);
@@ -183,9 +182,8 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 } catch (TelegramApiException e) {
                     createMessage("Показал отрывки\n" + e, update, BotConfig.USER_SUPPORT);
                 }
-            } else if (update.getCallbackQuery().getData().equals("epub")) {
-                createDocument(backMessage, update.getCallbackQuery().getData(), update,
-                        backText);
+            } else if (backText.equals("epub")) {
+                createDocument(backMessage, backText, update);
                 /* ok
                 AnswerCallbackQuery answer = new AnswerCallbackQuery();
                 String idCall = update.getCallbackQuery().getId();
@@ -196,23 +194,19 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     execute(answer);
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
-                }
-                */
+                }*/
             } else if (update.getCallbackQuery().getData().equals("fb-two")) {
-                createDocument(backMessage, update.getCallbackQuery().getData(), update,
-                        backText);
+                createDocument(backMessage, backText, update);
             } else if (update.getCallbackQuery().getData().equals("pdf")) {
-                createDocument(backMessage, update.getCallbackQuery().getData(), update,
-                        backText);
+                createDocument(backMessage, backText, update);
             } else if (update.getCallbackQuery().getData().equals("audio")) {
-                createAudio(backMessage, update.getCallbackQuery().getData(), update,
-                        backText);
+                createAudio(backMessage, backText, update);
             } else if (update.getCallbackQuery().getData().equals("shops")) {
                 Document book = collection.find().skip(showBook).first();
                 assert book != null;
                 EditMessageReplyMarkup keyboard = EditMessageReplyMarkup.builder()
-                        .chatId(backMessage.getChatId().toString())
-                        .messageId(backMessage.getMessageId()).build();
+                        .chatId(chatId)
+                        .messageId(messageId).build();
                 InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
                 List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
                 List<InlineKeyboardButton> row1 = new ArrayList<>();
@@ -243,8 +237,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 keyboard.setReplyMarkup(inlineKeyboard);
                 try {
                     execute(keyboard);
-                    createLog(update, "*Отобразил клавиатуру " + backText + "*", "Bot ",
-                            true);
+                    createLog(update, "*Отобразил клавиатуру " + backText + "*", "Bot ", true);
                 } catch (TelegramApiException e) {
                     createMessage("Показал магазины\n" + e, update, BotConfig.USER_SUPPORT);
                 }
@@ -272,7 +265,6 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     }
 
     private void createMessage(String text, Update update, String sentId) {
-        textLog = text.replaceAll("\\\\", "");
         SendMessage createMessage = SendMessage.builder()
                 .chatId(sentId)
                 .text(text)
@@ -281,7 +273,10 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             createKeyboard(createMessage, update);
         try {
             execute(createMessage);
-            if (!text.equals("Со мной общается @")) createLog(update, textLog, "Bot ", false);
+            if (!text.equals("Со мной общается @")) {
+                textLog = text.replaceAll("\\\\", "");
+                createLog(update, textLog, "Bot ", false);
+            }
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
@@ -308,14 +303,14 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         }
     }
 
-    private void createCover(Update update, Message message) {
-        SendPhoto photo = new SendPhoto();
-        photo.setParseMode(ParseMode.MARKDOWNV2);
-        photo.setChatId(message.getChatId().toString());
+    private void createCover(Update update, String chatId) {
         Document doc = collection.find().limit(1).first();
         assert doc != null;
-        photo.setPhoto(new InputFile(doc.getString("cover")));
-        photo.setCaption("*" + doc.getString("name") + "*\n" + doc.getString("description"));
+        SendPhoto photo = SendPhoto.builder()
+                .parseMode("MarkdownV2")
+                .chatId(chatId)
+                .photo(new InputFile(doc.getString("cover")))
+                .caption("*" + doc.getString("name") + "*\n" + doc.getString("description")).build();
         InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
         nextBook++;
         createFirstKeyboard(update, inlineKeyboard);
@@ -328,13 +323,12 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         }
     }
 
-    private void createDocument(Message message, String whichButton,
-                                Update update, String backText) {
+    private void createDocument(Message message, String backText, Update update) {
         SendDocument document = new SendDocument();
         document.setChatId(message.getChatId().toString());
         Document doc = collection.find().skip(showBook).first();
         assert doc != null;
-        document.setDocument(new InputFile(doc.getString(whichButton)));
+        document.setDocument(new InputFile(doc.getString(backText)));
         try {
             execute(document);
             createLog(update, "*Прислал " + backText + "*", "Bot ", true);
@@ -343,13 +337,12 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         }
     }
 
-    private void createAudio(Message message, String whichButton,
-                             Update update, String backText) {
+    private void createAudio(Message message, String backText, Update update) {
         SendAudio audio = new SendAudio();
         audio.setChatId(message.getChatId().toString());
         Document doc = collection.find().skip(showBook).first();
         assert doc != null;
-        audio.setAudio(new InputFile(doc.getString(whichButton)));
+        audio.setAudio(new InputFile(doc.getString(backText)));
         try {
             execute(audio);
             createLog(update, "*Прислал " + backText + "*", "Bot ", true);
@@ -397,7 +390,6 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     }
 
     private void createKeyboard(SendMessage createMessage, Update update) {
-        ReplyKeyboardMarkup createKeyboard = new ReplyKeyboardMarkup();
         List<KeyboardRow> keyboard = new ArrayList<>();
         KeyboardRow row1 = new KeyboardRow();
         KeyboardRow row2 = new KeyboardRow();
@@ -407,11 +399,12 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         row2.add("👤 Позвать оператора");
         keyboard.add(row1);
         keyboard.add(row2);
-        createKeyboard.setKeyboard(keyboard);
-        createKeyboard.setResizeKeyboard(true);
-        createKeyboard.setOneTimeKeyboard(true);
-        createKeyboard.setInputFieldPlaceholder("Пишите, я читаю");
-        createKeyboard.setSelective(true); //https://core.telegram.org/bots/api#replykeyboardmarkup
+        ReplyKeyboardMarkup createKeyboard = ReplyKeyboardMarkup.builder()
+                .keyboard(keyboard)
+                .resizeKeyboard(true)
+                .oneTimeKeyboard(true)
+                .inputFieldPlaceholder("Пишите, я читаю")
+                .selective(true).build();
         createMessage.setReplyMarkup(createKeyboard);
         createLog(update, "*Клавиатуру нарисовал*", "Bot ", false);
     }
@@ -427,8 +420,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         Calendar calendar = new GregorianCalendar();
         calendar.setTime(date);
         calendar.add(Calendar.DATE, 1);
-        date = calendar.getTime();
-        */
+        date = calendar.getTime();*/
         if (keyboard) {
             Id = update.getCallbackQuery().getFrom().getId().toString();
             Answer = update.getCallbackQuery().getMessage().toString();
@@ -505,7 +497,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 createMessage("Здравствуйте🤖", update, chatId);
             } else if (text.contains("книг") || text.contains("книж") || text.contains("отрывок")) {
                 createFewCovers(message, update);
-                createCover(update, message);
+                createCover(update, chatId);
             } else if (text.contains("оператор")) {
                 if (userIdTalkSupport.equals("")) {
                     createMessage("Сейчас позову, минутку🗣", update, chatId);
