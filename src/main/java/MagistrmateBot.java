@@ -412,15 +412,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     public void createLog(Update update, String textLog, String who, Boolean keyboard) {
         Instant instant = Instant.now();
         ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, ZoneId.of("Europe/Moscow"));
-        DateTimeFormatter date = DateTimeFormatter.ofPattern("dd/MM/yy");
-        String dateString = zdt.format(date);
+        regionDay();
         DateTimeFormatter time = DateTimeFormatter.ofPattern("HH:mm");
         String timeString = zdt.format(time);
-        /* tomorrow
-        Calendar calendar = new GregorianCalendar();
-        calendar.setTime(date);
-        calendar.add(Calendar.DATE, 1);
-        date = calendar.getTime();*/
         if (keyboard) {
             Id = update.getCallbackQuery().getFrom().getId().toString();
             Answer = update.getCallbackQuery().getMessage().toString();
@@ -432,14 +426,14 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         }
         try {
             collectionLog.insertOne(new Document().append("_id", Id).append("Info", Answer).append("Name", name)
-                    .append("Username", username).append(dateString, timeString + " " + who + ": " + textLog + "\n"));
+                    .append("Username", username).append(regionDay(), timeString + " " + who + ": " + textLog + "\n"));
         } catch (MongoException me) {
             Document doc = collectionLog.find(Filters.eq("_id", Id)).first();
             assert doc != null;
             Document query = new Document().append("_id", Id);
-            if (doc.getString(dateString) == null) Script = "";
-            else Script = doc.getString(dateString);
-            Bson updates = Updates.combine(Updates.set(dateString, Script + timeString + " " + who + ": " + textLog +
+            if (doc.getString(regionDay()) == null) Script = "";
+            else Script = doc.getString(regionDay());
+            Bson updates = Updates.combine(Updates.set(regionDay(), Script + timeString + " " + who + ": " + textLog +
                     "\n"));
             UpdateOptions options = new UpdateOptions().upsert(true);
             collectionLog.updateOne(query, updates, options);
@@ -454,19 +448,11 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         Document doc = collectionLog.find(Filters.eq("_id", whoId)).first();
         SendMessage createMessage = new SendMessage();
         createMessage.setChatId(BotConfig.USER_SUPPORT);
-        Instant instant = Instant.now();
-        ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, ZoneId.of("Europe/Moscow"));
-        DateTimeFormatter date = DateTimeFormatter.ofPattern("dd/MM/yy");
-        String dateString = zdt.format(date);
-        /* tomorrow
-        Calendar calendar = new GregorianCalendar();
-        calendar.setTime(date);
-        calendar.add(Calendar.DATE, 1);
-        date = calendar.getTime();*/
+        regionDay();
         assert doc != null;
-        if (doc.getString(dateString).length() > 4096) {
-            textHistory = "...\n" + doc.getString(dateString).substring(3500);
-        } else textHistory = doc.getString(dateString);
+        if (doc.getString(regionDay()).length() > 4096) {
+            textHistory = "...\n" + doc.getString(regionDay()).substring(3500);
+        } else textHistory = doc.getString(regionDay());
         createMessage.setText(textHistory + "Имя: " + doc.getString("Name") + " Логин: @" + doc.getString("Username"));
         createMessage.enableMarkdownV2(false);
         try {
@@ -517,5 +503,16 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 createMessage("Давайте вместе разберемся, чем я могу помочь🤔", update, chatId);
             }
         }
+    }
+    public String regionDay(){
+        Instant instant = Instant.now();
+        ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, ZoneId.of("Europe/Moscow"));
+        DateTimeFormatter date = DateTimeFormatter.ofPattern("dd/MM/yy");
+        return zdt.format(date);
+        /* tomorrow
+        Calendar calendar = new GregorianCalendar();
+        calendar.setTime(date);
+        calendar.add(Calendar.DATE, 1);
+        date = calendar.getTime();*/
     }
 }
