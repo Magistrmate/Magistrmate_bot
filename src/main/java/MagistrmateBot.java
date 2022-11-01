@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class MagistrmateBot extends TelegramLongPollingBot {
-    Integer nextBook = 0;
+    Integer nextBook = 1;
     Integer showBook;
     Boolean NextBook = false;
     String textLog;
@@ -104,6 +104,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             chatId = backMessage.getChatId().toString();
             Integer messageId = backMessage.getMessageId();
             createLog(update, "*Нажал на кнопку " + backText + "*", "User", true);
+            Document doc = collectionLog.find(Filters.eq("_id", Id)).first();
+            assert doc != null;
+            nextBook = doc.getInteger("NumberBook");
             showBook = nextBook - 1;
             if (backText.equals("next") || backText.equals("previous") || backText.matches(".*\\d+.*")) {
                 NextBook = true;
@@ -125,6 +128,10 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         .messageId(messageId).build();
                 InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
                 nextBook++;
+                Document query = new Document().append("_id", Id);
+                Bson updates = Updates.combine(Updates.set("NumberBook" , nextBook));
+                UpdateOptions options = new UpdateOptions().upsert(true);
+                collectionLog.updateOne(query, updates, options);
                 createFirstKeyboard(update, inlineKeyboard);
                 replacePhoto.setReplyMarkup(inlineKeyboard);
                 try {
@@ -312,7 +319,6 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 .photo(new InputFile(doc.getString("cover")))
                 .caption("*" + doc.getString("name") + "*\n" + doc.getString("description")).build();
         InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
-        nextBook++;
         createFirstKeyboard(update, inlineKeyboard);
         photo.setReplyMarkup(inlineKeyboard);
         try {
