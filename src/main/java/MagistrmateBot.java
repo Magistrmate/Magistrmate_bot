@@ -104,11 +104,11 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             chatId = backMessage.getChatId().toString();
             Integer messageId = backMessage.getMessageId();
             createLog(update, "*Нажал на кнопку " + backText + "*", "User", true);
-            Document doc = collectionLog.find(Filters.eq("_id", Id)).first();
-            assert doc != null;
-            nextBook = doc.getInteger("NumberBook");
-            showBook = nextBook - 1;
             if (backText.equals("next") || backText.equals("previous") || backText.matches(".*\\d+.*")) {
+                Document doc = collectionLog.find(Filters.eq("_id", Id)).first();
+                assert doc != null;
+                if (doc.getInteger("NumberBook") != null) nextBook = doc.getInteger("NumberBook");
+                showBook = nextBook - 1;
                 NextBook = true;
                 if (backText.equals("previous")) {
                     if (nextBook == 1) nextBook = 5;
@@ -280,7 +280,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             createKeyboard(createMessage, update);
         try {
             execute(createMessage);
-            if (!text.equals("Со мной общается @")) {
+            if (!text.equals("Со мной общается @") && !text.equals("Ало, там очередь уже!")) {
                 textLog = text.replaceAll("\\\\", "");
                 createLog(update, textLog, "Bot ", false);
             }
@@ -377,7 +377,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             List<InlineKeyboardButton> row2 = new ArrayList<>();
             for (int i = 1; i <= collection.countDocuments(); i++) {
                 InlineKeyboardButton bookButton = new InlineKeyboardButton();
-                if (nextBook == i) bookButton.setText("• " + i + " •");
+                if (nextBook == i) bookButton.setText("🔹" + i + "🔹");
                 else bookButton.setText(String.valueOf(i));
                 bookButton.setCallbackData(String.valueOf(i));
                 row2.add(bookButton);
