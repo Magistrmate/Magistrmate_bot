@@ -36,11 +36,11 @@ import java.util.Locale;
 public class MagistrmateBot extends TelegramLongPollingBot {
     Integer nextBook = 1;
     Integer showBook;
-    Boolean NextBook = false;
+    Boolean nextBookUse = false;
     String textLog;
-    String Id;
-    String Answer;
-    String Script;
+    String id;
+    String answer;
+    String script;
     String userIdTalkSupport = "";
     String userIdTalkSupportWait = "";
     String textHistory;
@@ -105,11 +105,11 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             Integer messageId = backMessage.getMessageId();
             createLog(update, "*Нажал на кнопку " + backText + "*", "User", true);
             if (backText.equals("next") || backText.equals("previous") || backText.matches(".*\\d+.*")) {
-                Document doc = collectionLog.find(Filters.eq("_id", Id)).first();
+                Document doc = collectionLog.find(Filters.eq("_id", id)).first();
                 assert doc != null;
                 if (doc.getInteger("NumberBook") != null) nextBook = doc.getInteger("NumberBook");
                 showBook = nextBook - 1;
-                NextBook = true;
+                nextBookUse = true;
                 if (backText.equals("previous")) {
                     if (nextBook == 1) nextBook = 5;
                     else nextBook = nextBook - 2;
@@ -128,8 +128,8 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         .messageId(messageId).build();
                 InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
                 nextBook++;
-                Document query = new Document().append("_id", Id);
-                Bson updates = Updates.combine(Updates.set("NumberBook" , nextBook));
+                Document query = new Document().append("_id", id);
+                Bson updates = Updates.combine(Updates.set("NumberBook", nextBook));
                 UpdateOptions options = new UpdateOptions().upsert(true);
                 collectionLog.updateOne(query, updates, options);
                 createFirstKeyboard(update, inlineKeyboard);
@@ -280,7 +280,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             createKeyboard(createMessage, update);
         try {
             execute(createMessage);
-            if (!text.equals("Со мной общается @") && !text.equals("Ало, там очередь уже!")) {
+            if (!text.contains("Со мной общается @") && !text.equals("Ало, там очередь уже!")) {
                 textLog = text.replaceAll("\\\\", "");
                 createLog(update, textLog, "Bot ", false);
             }
@@ -373,7 +373,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         ExcerptButton.setCallbackData("excerpt");
         row1.add(ShopsButton);
         rowList.add(row1);
-        if (update.getCallbackQuery() != null && NextBook) {
+        if (update.getCallbackQuery() != null && nextBookUse) {
             List<InlineKeyboardButton> row2 = new ArrayList<>();
             for (int i = 1; i <= collection.countDocuments(); i++) {
                 InlineKeyboardButton bookButton = new InlineKeyboardButton();
@@ -422,24 +422,24 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         DateTimeFormatter time = DateTimeFormatter.ofPattern("HH:mm");
         String timeString = zdt.format(time);
         if (keyboard) {
-            Id = update.getCallbackQuery().getFrom().getId().toString();
-            Answer = update.getCallbackQuery().getMessage().toString();
+            id = update.getCallbackQuery().getFrom().getId().toString();
+            answer = update.getCallbackQuery().getMessage().toString();
         } else {
-            Id = update.getMessage().getFrom().getId().toString();
-            Answer = update.getMessage().toString();
+            id = update.getMessage().getFrom().getId().toString();
+            answer = update.getMessage().toString();
             name = update.getMessage().getFrom().getFirstName();
             username = update.getMessage().getFrom().getUserName();
         }
         try {
-            collectionLog.insertOne(new Document().append("_id", Id).append("Info", Answer).append("Name", name)
+            collectionLog.insertOne(new Document().append("_id", id).append("Info", answer).append("Name", name)
                     .append("Username", username).append(regionDay(), timeString + " " + who + ": " + textLog + "\n"));
         } catch (MongoException me) {
-            Document doc = collectionLog.find(Filters.eq("_id", Id)).first();
+            Document doc = collectionLog.find(Filters.eq("_id", id)).first();
             assert doc != null;
-            Document query = new Document().append("_id", Id);
-            if (doc.getString(regionDay()) == null) Script = "";
-            else Script = doc.getString(regionDay());
-            Bson updates = Updates.combine(Updates.set(regionDay(), Script + timeString + " " + who + ": " + textLog +
+            Document query = new Document().append("_id", id);
+            if (doc.getString(regionDay()) == null) script = "";
+            else script = doc.getString(regionDay());
+            Bson updates = Updates.combine(Updates.set(regionDay(), script + timeString + " " + who + ": " + textLog +
                     "\n"));
             UpdateOptions options = new UpdateOptions().upsert(true);
             collectionLog.updateOne(query, updates, options);
@@ -487,8 +487,16 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         "мира, поэтому пишите и если не пойму, то выдам вам подсказки\\.", update, chatId);
             } else if (text.contains("прив") || text.contains("хай") || text.contains("здравствуй")) {
                 createMessage("Здравствуйте🤖", update, chatId);
-            } else if (text.contains("книг") || text.contains("книж") || text.contains("отрывок")) {
-                createFewCovers(message, update);
+            } else if (text.contains("жанр") || text.contains("про что")) {
+                createMessage("Книги в разных жанрах от ужасов👻, мистики👹 и научной фантастики🧬 до современной прозы📓 и фэнтези✨", update, chatId);
+            } else if (text.contains("обща") || text.contains("говор") || text.contains("болта")) {
+                createMessage("Без проблем👌 Благодаря вам я всё социальней😅 Однако, может начаться паника и я выдам вам кнопки🙃", update, chatId);
+            } else if (text.contains("книг") || text.contains("книж") || text.contains("отрывок") ||
+                    text.contains("психолог") || text.contains("популярн") || (text.contains("ремарк"))) {
+                if (text.contains("ремарк")) createMessage("Классные книги пишет👏 @Magistrmate это про другое🤷", update, chatId);
+                if (text.contains("психолог")) createMessage("Таких книг у нас, к сожалению, нет😔 Зато есть эти⬇", update, chatId);
+                if (text.contains("популярн")) createMessage("Точной статистики, к сожалению, нет😞, но я бы вам советовал обратить внимание на сборник произведений😁", update, chatId);
+                else createFewCovers(message, update);
                 createCover(update, chatId);
             } else if (text.contains("оператор")) {
                 if (userIdTalkSupport.equals("")) {
@@ -505,12 +513,18 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         [Апасов Даниил](tg://user?id=411435416) родился и вырос в провинциальном городке далеко от столицы\\. С 18 лет жил в Москве, получил два высших технических образования и продолжил работать в той же сфере\\. У него есть жена, собака и острое желание писать свои истории для вас\\.✍
                         Контакты: 🟦 [VK](vk.com/magistrmate),📷 [Instagram](instagram.com/magistrmate/),🐦 [Twitter](twitter.com/Magistrmate),🧑📖 [Facebook](facebook.com/magistrmate), ✉ magistrmate@ya\\.ru
                         Бот написан автором книг👾""", update, chatId);
+            } else if (text.contains("спасибо")) {
+                createMessage("Пожалуйста, обращайтесь😌", update, chatId);
+            } else if (text.equals("ок") || text.equals("окей")) {
+                createMessage("👌", update, chatId);
+                createMessage("Рад помочь😏, " + name, update, chatId);
             } else {
                 createMessage("Давайте вместе разберемся, чем я могу помочь🤔", update, chatId);
             }
         }
     }
-    public String regionDay(){
+
+    public String regionDay() {
         Instant instant = Instant.now();
         ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, ZoneId.of("Europe/Moscow"));
         DateTimeFormatter date = DateTimeFormatter.ofPattern("dd/MM/yy");
