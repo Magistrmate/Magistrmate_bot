@@ -86,8 +86,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         }
                     }
                 } else {
-                    if (text.contains("Нарисуй клаву")) createKeyboardSupport("Окей, нарисовал", chatId);
-                    if (text.equals("список юзеров")) {
+                    if (text.contains("Нарисуй клаву")) {
+                        createKeyboardSupport("Окей, нарисовал", chatId);
+                    } else if (text.equals("список юзеров")) {
                         List<Document> usernames = collectionLog.find().into(new ArrayList<>());
                         StringBuilder textAll = new StringBuilder();
                         int i = 1;
@@ -101,7 +102,18 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                                 .build();
                         try {
                             execute(createMessage);
-                            System.out.println(textAll);
+                        } catch (TelegramApiException e) {
+                            e.printStackTrace();
+                        }
+                    } else if (text.equals("отправь сообщение")) {
+                        InlineKeyboardMarkup inlineKeyboardSupport = new InlineKeyboardMarkup();
+                        createInlineKeyboardSupport(inlineKeyboardSupport);
+                        SendMessage createMessage = SendMessage.builder()
+                                .chatId(chatId)
+                                .text("кому отправить")
+                                .replyMarkup(inlineKeyboardSupport).build();
+                        try {
+                            execute(createMessage);
                         } catch (TelegramApiException e) {
                             e.printStackTrace();
                         }
@@ -447,7 +459,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         KeyboardRow row1 = new KeyboardRow();
         KeyboardRow row2 = new KeyboardRow();
         row1.add("список юзеров");
-        row1.add("кнопка 2");
+        row1.add("отправь сообщение");
         row2.add("кнопка 3");
         row2.add("кнопка 4");
         keyboardSupport.add(row1);
@@ -464,6 +476,30 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+    }
+
+    public void createInlineKeyboardSupport(InlineKeyboardMarkup inlineKeyboardSupport) {
+        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
+        List<Document> usernames = collectionLog.find().into(new ArrayList<>());
+        List<InlineKeyboardButton> row1 = new ArrayList<>();
+        //int i = 1;
+/*        for (Document username : usernames) {
+            if (i == 3) {
+                List<InlineKeyboardButton> row2 = new ArrayList<>();
+            }
+            InlineKeyboardButton button = new InlineKeyboardButton();
+            button.setText("@" + username);
+            button.setCallbackData(String.valueOf(username));
+            row1.add(button);
+            i++;*/
+        for (int i = 0; i <= 15 ; i++) {
+            InlineKeyboardButton button = new InlineKeyboardButton();
+            button.setText("@" + i);
+            button.setCallbackData(String.valueOf(i));
+            row1.add(button);
+        }
+        rowList.add(row1);
+        inlineKeyboardSupport.setKeyboard(rowList);
     }
 
     public void createLog(Update update, String textLog, String who, Boolean keyboard) {
