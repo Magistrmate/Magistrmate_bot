@@ -74,14 +74,37 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             name = message.getFrom().getFirstName();
             text = message.getText();
             if (chatId.equals(BotConfig.USER_SUPPORT)) {
-                createMessage(text, update, userIdTalkSupport);
-                if (text.contains("До свидания")) {
-                    if (userIdTalkSupportWait.equals("") || userIdTalkSupport.equals(userIdTalkSupportWait)) {
-                        userIdTalkSupport = "";
-                    } else {
-                        userIdTalkSupport = userIdTalkSupportWait;
-                        createMessage("Оператор сейчас вам ответит", update, userIdTalkSupportWait);
-                        createHistory(userIdTalkSupport);
+                if (!userIdTalkSupport.equals("")) {
+                    createMessage(text, update, userIdTalkSupport);
+                    if (text.contains("До свидания")) {
+                        if (userIdTalkSupportWait.equals("") || userIdTalkSupport.equals(userIdTalkSupportWait)) {
+                            userIdTalkSupport = "";
+                        } else {
+                            userIdTalkSupport = userIdTalkSupportWait;
+                            createMessage("Оператор сейчас вам ответит", update, userIdTalkSupportWait);
+                            createHistory(userIdTalkSupport);
+                        }
+                    }
+                } else {
+                    if (text.contains("Нарисуй клаву")) createKeyboardSupport("Окей, нарисовал", chatId);
+                    if (text.equals("список юзеров")) {
+                        List<Document> usernames = collectionLog.find().into(new ArrayList<>());
+                        StringBuilder textAll = new StringBuilder();
+                        int i = 1;
+                        for (Document username : usernames) {
+                            textAll.append(i).append(" @").append(username.getString("Username")).append("\n");
+                            i++;
+                        }
+                        SendMessage createMessage = SendMessage.builder()
+                                .chatId(chatId)
+                                .text(String.valueOf(textAll))
+                                .build();
+                        try {
+                            execute(createMessage);
+                            System.out.println(textAll);
+                        } catch (TelegramApiException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             } else if (chatId.equals(userIdTalkSupport))
@@ -413,6 +436,34 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 .selective(true).build();
         createMessage.setReplyMarkup(createKeyboard);
         createLog(update, "*Клавиатуру нарисовал*", "Bot ", false);
+    }
+
+    public void createKeyboardSupport(String text, String sentId) {
+        SendMessage createMessage = SendMessage.builder()
+                .chatId(sentId)
+                .text(text)
+                .parseMode("MarkdownV2").build();
+        List<KeyboardRow> keyboardSupport = new ArrayList<>();
+        KeyboardRow row1 = new KeyboardRow();
+        KeyboardRow row2 = new KeyboardRow();
+        row1.add("список юзеров");
+        row1.add("кнопка 2");
+        row2.add("кнопка 3");
+        row2.add("кнопка 4");
+        keyboardSupport.add(row1);
+        keyboardSupport.add(row2);
+        ReplyKeyboardMarkup createKeyboard = ReplyKeyboardMarkup.builder()
+                .keyboard(keyboardSupport)
+                .resizeKeyboard(true)
+                .oneTimeKeyboard(true)
+                .inputFieldPlaceholder("Пиши давай")
+                .selective(true).build();
+        createMessage.setReplyMarkup(createKeyboard);
+        try {
+            execute(createMessage);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
     }
 
     public void createLog(Update update, String textLog, String who, Boolean keyboard) {
