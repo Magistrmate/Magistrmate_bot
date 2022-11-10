@@ -57,6 +57,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     Boolean waitId = false;
     Boolean waitText = false;
     String whoId;
+    String parseMode;
 
     @Override
     public String getBotUsername() {
@@ -91,6 +92,10 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 } else {
                     if (text.contains("Нарисуй клаву")) {
                         createKeyboardSupport("Окей, нарисовал", chatId);
+                    } else if (text.toLowerCase().contains("забей")) {
+                        waitId = false;
+                        waitText = false;
+                        createMessage("Забил", update, BotConfig.USER_SUPPORT);
                     } else if (text.equals("список юзеров")) {
                         List<Document> usernames = collectionLog.find().into(new ArrayList<>());
                         StringBuilder textAll = new StringBuilder();
@@ -320,10 +325,12 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     }
 
     private void createMessage(String text, Update update, String sentId) {
+        if (waitText) parseMode = "";
+        else parseMode = "MarkdownV2";
         SendMessage createMessage = SendMessage.builder()
                 .chatId(sentId)
                 .text(text)
-                .parseMode("MarkdownV2").build();
+                .parseMode(parseMode).build();
         if (text.equals("Давайте вместе разберемся, чем я могу помочь🤔"))
             createKeyboard(createMessage, update);
         try {
