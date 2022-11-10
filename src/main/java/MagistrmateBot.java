@@ -54,6 +54,8 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     MongoDatabase database = mongoClient.getDatabase("MagistrmateDatabase");
     MongoCollection<Document> collection = database.getCollection("MagistrmateCollection");
     MongoCollection<Document> collectionLog = database.getCollection("Log");
+    Boolean waitId = false;
+    Boolean waitText = false;
 
     @Override
     public String getBotUsername() {
@@ -93,7 +95,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         StringBuilder textAll = new StringBuilder();
                         int i = 1;
                         for (Document username : usernames) {
-                            textAll.append(i).append(" @").append(username.getString("Username")).append("\n");
+                            textAll.append(username.getString("_id")).append("\n");
                             i++;
                         }
                         SendMessage createMessage = SendMessage.builder()
@@ -111,12 +113,21 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         SendMessage createMessage = SendMessage.builder()
                                 .chatId(chatId)
                                 .text("кому отправить")
-                                .replyMarkup(inlineKeyboardSupport).build();
+                                //.replyMarkup(inlineKeyboardSupport).build();
+                                .build();
                         try {
                             execute(createMessage);
                         } catch (TelegramApiException e) {
                             e.printStackTrace();
                         }
+                        waitId = true;
+                    } else if (waitId) {
+                        id = text;
+                        createMessage("Что отправить?", update, BotConfig.USER_SUPPORT);
+                        waitId = false;
+                        waitText = true;
+                    } else if (waitText) {
+                        createMessage(text, update, id);
                     }
                 }
             } else if (chatId.equals(userIdTalkSupport))
@@ -482,8 +493,8 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
         List<Document> usernames = collectionLog.find().into(new ArrayList<>());
         List<InlineKeyboardButton> row1 = new ArrayList<>();
-        //int i = 1;
-/*        for (Document username : usernames) {
+        int i = 1;
+        for (Document username : usernames) {
             if (i == 3) {
                 List<InlineKeyboardButton> row2 = new ArrayList<>();
             }
@@ -491,8 +502,9 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             button.setText("@" + username);
             button.setCallbackData(String.valueOf(username));
             row1.add(button);
-            i++;*/
-        for (int i = 0; i <= 15 ; i++) {
+            i++;
+        }
+        for (i = 0; i <= 15 ; i++) {
             InlineKeyboardButton button = new InlineKeyboardButton();
             button.setText("@" + i);
             button.setCallbackData(String.valueOf(i));
