@@ -79,7 +79,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             name = message.getFrom().getFirstName();
             text = message.getText();
             if (chatId.equals(BotConfig.USER_SUPPORT)) {
-                createLog(update, text, "User", false);
+                if (!waitText) createLog(update, text, "User", false);
                 if (!userIdTalkSupport.equals("")) {
                     createMessage(text, update, userIdTalkSupport);
                     if (text.contains("До свидания")) {
@@ -126,6 +126,8 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     } else if (waitText) {
                         createMessage(text, update, whoId);
                         waitText = false;
+                        createLog(update, text, "User", false);
+                        createMessage("Отправил", update, BotConfig.USER_SUPPORT);
                     } else createMessage("Ты втираешь мне какую\\-то дичь", update,BotConfig.USER_SUPPORT);
                 }
             } else if (chatId.equals(userIdTalkSupport))
