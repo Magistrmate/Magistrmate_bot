@@ -3,7 +3,6 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.Updates;
 import org.bson.Document;
@@ -32,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+
+import static com.mongodb.client.model.Filters.eq;
 
 public class MagistrmateBot extends TelegramLongPollingBot {
     Integer nextBook = 1;
@@ -78,6 +79,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             name = message.getFrom().getFirstName();
             text = message.getText();
             if (chatId.equals(BotConfig.USER_SUPPORT)) {
+                createLog(update, text, "User", false);
                 if (!userIdTalkSupport.equals("")) {
                     createMessage(text, update, userIdTalkSupport);
                     if (text.contains("До свидания")) {
@@ -114,18 +116,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                             e.printStackTrace();
                         }
                     } else if (text.equals("отправь сообщение")) {
-                        InlineKeyboardMarkup inlineKeyboardSupport = new InlineKeyboardMarkup();
-                        createInlineKeyboardSupport(inlineKeyboardSupport);
-                        SendMessage createMessage = SendMessage.builder()
-                                .chatId(chatId)
-                                .text("кому отправить")
-                                //.replyMarkup(inlineKeyboardSupport).build();
-                                .build();
-                        try {
-                            execute(createMessage);
-                        } catch (TelegramApiException e) {
-                            e.printStackTrace();
-                        }
+                        createMessage("Кому отправить?", update, chatId);
                         waitId = true;
                     } else if (waitId) {
                         whoId = text;
@@ -158,7 +149,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             Integer messageId = backMessage.getMessageId();
             createLog(update, "*Нажал на кнопку " + backText + "*", "User", true);
             if (backText.equals("next") || backText.equals("previous") || backText.matches(".*\\d+.*")) {
-                Document doc = collectionLog.find(Filters.eq("_id", id)).first();
+                Document doc = collectionLog.find(eq("_id", id)).first();
                 assert doc != null;
                 if (doc.getInteger("NumberBook") != null) nextBook = doc.getInteger("NumberBook");
                 showBook = nextBook - 1;
@@ -506,15 +497,15 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         }
     }
 
-    public void createInlineKeyboardSupport(InlineKeyboardMarkup inlineKeyboardSupport) {
+    /*public void createInlineKeyboardSupport(InlineKeyboardMarkup inlineKeyboardSupport) {
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
         List<Document> usernames = collectionLog.find().into(new ArrayList<>());
         List<InlineKeyboardButton> row1 = new ArrayList<>();
         int i = 1;
         for (Document username : usernames) {
-            /* f if (i == 3) {
+            *//* f if (i == 3) {
                 List<InlineKeyboardButton> row2 = new ArrayList<>();
-            }*/
+            }*//*
             InlineKeyboardButton button = new InlineKeyboardButton();
             button.setText("@" + username);
             button.setCallbackData(String.valueOf(username));
@@ -529,7 +520,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         }
         rowList.add(row1);
         inlineKeyboardSupport.setKeyboard(rowList);
-    }
+    }*/
 
     public void createLog(Update update, String textLog, String who, Boolean keyboard) {
         Instant instant = Instant.now();
@@ -541,16 +532,25 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             id = update.getCallbackQuery().getFrom().getId().toString();
             answer = update.getCallbackQuery().getMessage().toString();
         } else {
-            id = update.getMessage().getFrom().getId().toString();
-            answer = update.getMessage().toString();
-            name = update.getMessage().getFrom().getFirstName();
-            username = update.getMessage().getFrom().getUserName();
+            if (chatId.equals(BotConfig.USER_SUPPORT) && waitText) {
+                id = whoId;
+                Document doc = collectionLog.find(eq("_id", id)).first();
+                assert doc != null;
+                answer = doc.getString("Info");
+                name = doc.getString("Name");
+                username = doc.getString("Username");
+            } else {
+                id = update.getMessage().getFrom().getId().toString();
+                answer = update.getMessage().toString();
+                name = update.getMessage().getFrom().getFirstName();
+                username = update.getMessage().getFrom().getUserName();
+            }
         }
         try {
             collectionLog.insertOne(new Document().append("_id", id).append("Info", answer).append("Name", name)
                     .append("Username", username).append(regionDay(), timeString + " " + who + ": " + textLog + "\n"));
         } catch (MongoException me) {
-            Document doc = collectionLog.find(Filters.eq("_id", id)).first();
+            Document doc = collectionLog.find(eq("_id", id)).first();
             assert doc != null;
             Document query = new Document().append("_id", id);
             if (doc.getString(regionDay()) == null) script = "";
@@ -567,7 +567,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
     }
 
     public void createHistory(String whoId) {
-        Document doc = collectionLog.find(Filters.eq("_id", whoId)).first();
+        Document doc = collectionLog.find(eq("_id", whoId)).first();
         SendMessage createMessage = new SendMessage();
         createMessage.setChatId(BotConfig.USER_SUPPORT);
         regionDay();
