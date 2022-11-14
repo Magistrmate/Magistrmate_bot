@@ -35,8 +35,6 @@ import java.util.Locale;
 import static com.mongodb.client.model.Filters.eq;
 
 public class MagistrmateBot extends TelegramLongPollingBot {
-    Integer nextBook = 1;
-    Integer showBook;
     Boolean nextBookUse = false;
     String textLog;
     String id;
@@ -128,7 +126,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         waitText = false;
                         createLog(update, text, "User", false);
                         createMessage("Отправил", update, BotConfig.USER_SUPPORT);
-                    } else createMessage("Ты втираешь мне какую\\-то дичь", update,BotConfig.USER_SUPPORT);
+                    } else createMessage("Ты втираешь мне какую\\-то дичь", update, BotConfig.USER_SUPPORT);
                 }
             } else if (chatId.equals(userIdTalkSupport))
                 createMessage(text, update, BotConfig.USER_SUPPORT);
@@ -150,20 +148,17 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             chatId = backMessage.getChatId().toString();
             Integer messageId = backMessage.getMessageId();
             createLog(update, "*Нажал на кнопку " + backText + "*", "User", true);
+            Document doc = collectionLog.find(eq("_id", id)).first();
+            assert doc != null;
             if (backText.equals("next") || backText.equals("previous") || backText.matches(".*\\d+.*")) {
-                Document doc = collectionLog.find(eq("_id", id)).first();
-                assert doc != null;
-                if (doc.getInteger("NumberBook") != null) nextBook = doc.getInteger("NumberBook");
-                showBook = nextBook - 1;
                 nextBookUse = true;
-                if (backText.equals("previous")) {
-                    if (nextBook == 1) nextBook = 5;
-                    else nextBook = nextBook - 2;
-                } else if (backText.matches(".*\\d+.*")) {
-                    nextBook = Integer.parseInt(backText) - 1;
-                }
-                if (nextBook == collection.countDocuments()) nextBook = 0;
-                Document book = collection.find().skip(nextBook).first();
+                if (backText.equals("next")) changeNumberBook(doc.getInteger("NumberBook") + 1);
+                else if (backText.equals("previous")) {
+                    if (doc.getInteger("NumberBook") == 0) changeNumberBook((int) collection.countDocuments());
+                    else changeNumberBook(doc.getInteger("NumberBook") - 1);
+                } else if (backText.matches(".*\\d+.*")) changeNumberBook(Integer.valueOf(backText));
+                if (doc.getInteger("NumberBook") == collection.countDocuments()) changeNumberBook(1);
+                Document book = collection.find().skip(doc.getInteger("NumberBook")).first();
                 assert book != null;
                 InputMedia photo = InputMediaPhoto.builder()
                         .media(book.getString("cover"))
@@ -173,12 +168,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         .media(photo).chatId(chatId)
                         .messageId(messageId).build();
                 InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
-                nextBook++;
-                Document query = new Document().append("_id", id);
-                Bson updates = Updates.combine(Updates.set("NumberBook", nextBook));
-                UpdateOptions options = new UpdateOptions().upsert(true);
-                collectionLog.updateOne(query, updates, options);
-                createFirstKeyboard(update, inlineKeyboard);
+                createFirstKeyboard(update, inlineKeyboard, doc);
                 replacePhoto.setReplyMarkup(inlineKeyboard);
                 try {
                     execute(replacePhoto);
@@ -187,7 +177,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     createMessage("Смена обложки\n" + e, update, BotConfig.USER_SUPPORT);
                 }
             } else if (backText.equals("excerpt")) {
-                Document book = collection.find().skip(showBook).first();
+                Document book = collection.find().skip(doc.getInteger("NumberBook")).first();
                 assert book != null;
                 EditMessageReplyMarkup keyboard = EditMessageReplyMarkup.builder()
                         .chatId(chatId)
@@ -236,7 +226,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     createMessage("Показал отрывки\n" + e, update, BotConfig.USER_SUPPORT);
                 }
             } else if (backText.equals("epub")) {
-                createDocument(backMessage, backText, update);
+                createDocument(backMessage, backText, update, doc);
                 /* ok
                 AnswerCallbackQuery answer = new AnswerCallbackQuery();
                 String idCall = update.getCallbackQuery().getId();
@@ -249,13 +239,13 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                     e.printStackTrace();
                 }*/
             } else if (update.getCallbackQuery().getData().equals("fb-two")) {
-                createDocument(backMessage, backText, update);
+                createDocument(backMessage, backText, update, doc);
             } else if (update.getCallbackQuery().getData().equals("pdf")) {
-                createDocument(backMessage, backText, update);
+                createDocument(backMessage, backText, update, doc);
             } else if (update.getCallbackQuery().getData().equals("audio")) {
-                createAudio(backMessage, backText, update);
+                createAudio(backMessage, backText, update, doc);
             } else if (update.getCallbackQuery().getData().equals("shops")) {
-                Document book = collection.find().skip(showBook).first();
+                Document book = collection.find().skip(doc.getInteger("NumberBook")).first();
                 assert book != null;
                 EditMessageReplyMarkup keyboard = EditMessageReplyMarkup.builder()
                         .chatId(chatId)
@@ -299,7 +289,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 backKeyboard.setChatId(backMessage.getChatId().toString());
                 backKeyboard.setMessageId(backMessage.getMessageId());
                 InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
-                createFirstKeyboard(update, inlineKeyboard);
+                createFirstKeyboard(update, inlineKeyboard, doc);
                 backKeyboard.setReplyMarkup(inlineKeyboard);
                 try {
                     execute(backKeyboard);
@@ -375,7 +365,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 .photo(new InputFile(doc.getString("cover")))
                 .caption("*" + doc.getString("name") + "*\n" + doc.getString("description")).build();
         InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
-        createFirstKeyboard(update, inlineKeyboard);
+        createFirstKeyboard(update, inlineKeyboard, doc);
         photo.setReplyMarkup(inlineKeyboard);
         try {
             execute(photo);
@@ -385,12 +375,12 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         }
     }
 
-    private void createDocument(Message message, String backText, Update update) {
+    private void createDocument(Message message, String backText, Update update, Document doc) {
         SendDocument document = new SendDocument();
         document.setChatId(message.getChatId().toString());
-        Document doc = collection.find().skip(showBook).first();
-        assert doc != null;
-        document.setDocument(new InputFile(doc.getString(backText)));
+        Document book = collection.find().skip(doc.getInteger("NumberBook")).first();
+        assert book != null;
+        document.setDocument(new InputFile(book.getString(backText)));
         try {
             execute(document);
             createLog(update, "*Прислал " + backText + "*", "Bot ", true);
@@ -399,12 +389,12 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         }
     }
 
-    private void createAudio(Message message, String backText, Update update) {
+    private void createAudio(Message message, String backText, Update update, Document doc) {
         SendAudio audio = new SendAudio();
         audio.setChatId(message.getChatId().toString());
-        Document doc = collection.find().skip(showBook).first();
-        assert doc != null;
-        audio.setAudio(new InputFile(doc.getString(backText)));
+        Document book = collection.find().skip(doc.getInteger("NumberBook")).first();
+        assert book != null;
+        audio.setAudio(new InputFile(book.getString(backText)));
         try {
             execute(audio);
             createLog(update, "*Прислал " + backText + "*", "Bot ", true);
@@ -413,7 +403,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         }
     }
 
-    public void createFirstKeyboard(Update update, InlineKeyboardMarkup inlineKeyboard) {
+    public void createFirstKeyboard(Update update, InlineKeyboardMarkup inlineKeyboard, Document doc) {
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
         InlineKeyboardButton ShopsButton = new InlineKeyboardButton();
         InlineKeyboardButton NextButton = new InlineKeyboardButton();
@@ -433,7 +423,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             List<InlineKeyboardButton> row2 = new ArrayList<>();
             for (int i = 1; i <= collection.countDocuments(); i++) {
                 InlineKeyboardButton bookButton = new InlineKeyboardButton();
-                if (nextBook == i) bookButton.setText("🔹" + i + "🔹");
+                if (doc.getInteger("NumberBook") == i) bookButton.setText("🔹" + i + "🔹");
                 else bookButton.setText(String.valueOf(i));
                 bookButton.setCallbackData(String.valueOf(i));
                 row2.add(bookButton);
@@ -611,6 +601,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 createMessage("Без проблем👌 Благодаря вам я всё социальней😅 Однако, может начаться паника и я выдам вам кнопки🙃", update, chatId);
             } else if (text.contains("книг") || text.contains("книж") || text.contains("отрывок") ||
                     text.contains("психолог") || text.contains("популярн") || (text.contains("ремарк"))) {
+                changeNumberBook(0);
                 if (text.contains("ремарк"))
                     createMessage("Классные книги пишет👏 @Magistrmate это про другое🤷", update, chatId);
                 if (text.contains("психолог") || text.contains("детское воспитание"))
@@ -659,5 +650,12 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         calendar.setTime(date);
         calendar.add(Calendar.DATE, 1);
         date = calendar.getTime();*/
+    }
+
+    public void changeNumberBook(Integer numberBook) {
+        Document query = new Document().append("_id", id);
+        Bson updates = Updates.combine(Updates.set("NumberBook", numberBook));
+        UpdateOptions options = new UpdateOptions().upsert(true);
+        collectionLog.updateOne(query, updates, options);
     }
 }
