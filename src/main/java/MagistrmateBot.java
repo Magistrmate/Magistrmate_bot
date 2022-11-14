@@ -153,23 +153,14 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             assert doc != null;
             if (backText.equals("next") || backText.equals("previous") || backText.matches(".*\\d+.*")) {
                 if (backText.equals("next")) {
-                    if (doc.getInteger("NumberBook") + 1 == collection.countDocuments()) {
-                        showBook = 0;
-                        changeNumberBook(0);
-                    } else {
-                        showBook = doc.getInteger("NumberBook") + 1;
-                        changeNumberBook(doc.getInteger("NumberBook") + 1);
-                    }
+                    if (doc.getInteger("NumberBook") + 1 == collection.countDocuments()) showBook = 0;
+                    else showBook = doc.getInteger("NumberBook") + 1;
                 } else if (backText.equals("previous")) {
-                    if (doc.getInteger("NumberBook") == 0 && nextBookUse) {
-                        showBook = 5;
-                        changeNumberBook(5);
-                    } else {
-                        showBook = doc.getInteger("NumberBook") - 1;
-                        changeNumberBook(doc.getInteger("NumberBook") - 1);
-                    }
-                } else if (backText.matches(".*\\d+.*")) changeNumberBook(Integer.valueOf(backText));
+                    if (doc.getInteger("NumberBook") == 0 && nextBookUse) showBook = 5;
+                    else showBook = doc.getInteger("NumberBook") - 1;
+                } else if (backText.matches(".*\\d+.*")) showBook = Integer.parseInt(backText) - 1;
                 nextBookUse = true;
+                changeNumberBook(showBook);
                 Document book = collection.find().skip(showBook).first();
                 assert book != null;
                 InputMedia photo = InputMediaPhoto.builder()
@@ -417,19 +408,16 @@ public class MagistrmateBot extends TelegramLongPollingBot {
 
     public void createFirstKeyboard(Update update, InlineKeyboardMarkup inlineKeyboard) {
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
-        InlineKeyboardButton ShopsButton = new InlineKeyboardButton();
-        InlineKeyboardButton NextButton = new InlineKeyboardButton();
-        InlineKeyboardButton ExcerptButton = new InlineKeyboardButton();
         List<InlineKeyboardButton> row1 = new ArrayList<>();
         List<InlineKeyboardButton> row2_3 = new ArrayList<>();
         List<InlineKeyboardButton> row3_4 = new ArrayList<>();
-        ShopsButton.setText("🛍 Книга в магазинах");
-        ShopsButton.setCallbackData("shops");
-        NextButton.setText("➡ Следующая");
-        NextButton.setCallbackData("next");
-        ExcerptButton.setText("📄 Отрывок из книги");
-        ExcerptButton.setCallbackData("excerpt");
-        row1.add(ShopsButton);
+        InlineKeyboardButton shopsButton = InlineKeyboardButton.builder().text("🛍 Книга в магазинах")
+                .callbackData("shops").build();
+        InlineKeyboardButton nextButton = InlineKeyboardButton.builder().text("➡ Следующая")
+                .callbackData("next").build();
+        InlineKeyboardButton excerptButton = InlineKeyboardButton.builder().text("📄 Отрывок из книги")
+                .callbackData("excerpt").build();
+        row1.add(shopsButton);
         rowList.add(row1);
         if (update.getCallbackQuery() != null && nextBookUse) {
             List<InlineKeyboardButton> row2 = new ArrayList<>();
@@ -441,13 +429,12 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 row2.add(bookButton);
             }
             rowList.add(row2);
-            InlineKeyboardButton PreviousButton = new InlineKeyboardButton();
-            PreviousButton.setText("Предыдущая ⬅");
-            PreviousButton.setCallbackData("previous");
-            row2_3.add(PreviousButton);
+            InlineKeyboardButton previousButton = InlineKeyboardButton.builder().text("Предыдущая ⬅")
+                    .callbackData("previous").build();
+            row2_3.add(previousButton);
         }
-        row2_3.add(NextButton);
-        row3_4.add(ExcerptButton);
+        row2_3.add(nextButton);
+        row3_4.add(excerptButton);
         rowList.add(row2_3);
         rowList.add(row3_4);
         inlineKeyboard.setKeyboard(rowList);
@@ -500,31 +487,6 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             e.printStackTrace();
         }
     }
-
-    /*public void createInlineKeyboardSupport(InlineKeyboardMarkup inlineKeyboardSupport) {
-        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
-        List<Document> usernames = collectionLog.find().into(new ArrayList<>());
-        List<InlineKeyboardButton> row1 = new ArrayList<>();
-        int i = 1;
-        for (Document username : usernames) {
-            *//* f if (i == 3) {
-                List<InlineKeyboardButton> row2 = new ArrayList<>();
-            }*//*
-            InlineKeyboardButton button = new InlineKeyboardButton();
-            button.setText("@" + username);
-            button.setCallbackData(String.valueOf(username));
-            row1.add(button);
-            i++;
-        }
-        for (i = 0; i <= 15 ; i++) {
-            InlineKeyboardButton button = new InlineKeyboardButton();
-            button.setText("@" + i);
-            button.setCallbackData(String.valueOf(i));
-            row1.add(button);
-        }
-        rowList.add(row1);
-        inlineKeyboardSupport.setKeyboard(rowList);
-    }*/
 
     public void createLog(Update update, String textLog, String who, Boolean keyboard) {
         Instant instant = Instant.now();
@@ -671,3 +633,27 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         collectionLog.updateOne(query, updates, options);
     }
 }
+    /*public void createInlineKeyboardSupport(InlineKeyboardMarkup inlineKeyboardSupport) {
+        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
+        List<Document> usernames = collectionLog.find().into(new ArrayList<>());
+        List<InlineKeyboardButton> row1 = new ArrayList<>();
+        int i = 1;
+        for (Document username : usernames) {
+            *//* f if (i == 3) {
+                List<InlineKeyboardButton> row2 = new ArrayList<>();
+            }*//*
+            InlineKeyboardButton button = new InlineKeyboardButton();
+            button.setText("@" + username);
+            button.setCallbackData(String.valueOf(username));
+            row1.add(button);
+            i++;
+        }
+        for (i = 0; i <= 15 ; i++) {
+            InlineKeyboardButton button = new InlineKeyboardButton();
+            button.setText("@" + i);
+            button.setCallbackData(String.valueOf(i));
+            row1.add(button);
+        }
+        rowList.add(row1);
+        inlineKeyboardSupport.setKeyboard(rowList);
+    }*/
