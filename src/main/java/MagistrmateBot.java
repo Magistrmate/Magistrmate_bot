@@ -35,6 +35,7 @@ import java.util.Locale;
 import static com.mongodb.client.model.Filters.eq;
 
 public class MagistrmateBot extends TelegramLongPollingBot {
+    Integer showBook;
     Boolean nextBookUse = false;
     String textLog;
     String id;
@@ -151,14 +152,25 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             Document doc = collectionLog.find(eq("_id", id)).first();
             assert doc != null;
             if (backText.equals("next") || backText.equals("previous") || backText.matches(".*\\d+.*")) {
-                nextBookUse = true;
-                if (backText.equals("next")) changeNumberBook(doc.getInteger("NumberBook") + 1);
-                else if (backText.equals("previous")) {
-                    if (doc.getInteger("NumberBook") == 0) changeNumberBook((int) collection.countDocuments());
-                    else changeNumberBook(doc.getInteger("NumberBook") - 1);
+                if (backText.equals("next")) {
+                    if (doc.getInteger("NumberBook") + 1 == collection.countDocuments()) {
+                        showBook = 0;
+                        changeNumberBook(0);
+                    } else {
+                        showBook = doc.getInteger("NumberBook") + 1;
+                        changeNumberBook(doc.getInteger("NumberBook") + 1);
+                    }
+                } else if (backText.equals("previous")) {
+                    if (doc.getInteger("NumberBook") == 0 && nextBookUse) {
+                        showBook = 5;
+                        changeNumberBook(5);
+                    } else {
+                        showBook = doc.getInteger("NumberBook") - 1;
+                        changeNumberBook(doc.getInteger("NumberBook") - 1);
+                    }
                 } else if (backText.matches(".*\\d+.*")) changeNumberBook(Integer.valueOf(backText));
-                if (doc.getInteger("NumberBook") == collection.countDocuments()) changeNumberBook(1);
-                Document book = collection.find().skip(doc.getInteger("NumberBook")).first();
+                nextBookUse = true;
+                Document book = collection.find().skip(showBook).first();
                 assert book != null;
                 InputMedia photo = InputMediaPhoto.builder()
                         .media(book.getString("cover"))
@@ -168,7 +180,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                         .media(photo).chatId(chatId)
                         .messageId(messageId).build();
                 InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
-                createFirstKeyboard(update, inlineKeyboard, doc);
+                createFirstKeyboard(update, inlineKeyboard);
                 replacePhoto.setReplyMarkup(inlineKeyboard);
                 try {
                     execute(replacePhoto);
@@ -289,7 +301,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 backKeyboard.setChatId(backMessage.getChatId().toString());
                 backKeyboard.setMessageId(backMessage.getMessageId());
                 InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
-                createFirstKeyboard(update, inlineKeyboard, doc);
+                createFirstKeyboard(update, inlineKeyboard);
                 backKeyboard.setReplyMarkup(inlineKeyboard);
                 try {
                     execute(backKeyboard);
@@ -365,7 +377,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
                 .photo(new InputFile(doc.getString("cover")))
                 .caption("*" + doc.getString("name") + "*\n" + doc.getString("description")).build();
         InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
-        createFirstKeyboard(update, inlineKeyboard, doc);
+        createFirstKeyboard(update, inlineKeyboard);
         photo.setReplyMarkup(inlineKeyboard);
         try {
             execute(photo);
@@ -403,7 +415,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
         }
     }
 
-    public void createFirstKeyboard(Update update, InlineKeyboardMarkup inlineKeyboard, Document doc) {
+    public void createFirstKeyboard(Update update, InlineKeyboardMarkup inlineKeyboard) {
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
         InlineKeyboardButton ShopsButton = new InlineKeyboardButton();
         InlineKeyboardButton NextButton = new InlineKeyboardButton();
@@ -423,7 +435,7 @@ public class MagistrmateBot extends TelegramLongPollingBot {
             List<InlineKeyboardButton> row2 = new ArrayList<>();
             for (int i = 1; i <= collection.countDocuments(); i++) {
                 InlineKeyboardButton bookButton = new InlineKeyboardButton();
-                if (doc.getInteger("NumberBook") == i) bookButton.setText("🔹" + i + "🔹");
+                if (showBook + 1 == i) bookButton.setText("🔹" + i + "🔹");
                 else bookButton.setText(String.valueOf(i));
                 bookButton.setCallbackData(String.valueOf(i));
                 row2.add(bookButton);
